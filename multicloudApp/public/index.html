@@ -4,23 +4,57 @@
 <html lang="en">
 <head>
     <title>Team Yellow App</title>
-    <link  rel="stylesheet" href="stylesheets/style.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 </head>
 <body class="container">
 
 <header>
-</header>
-
+</header> 
 <main>
-    <div class="jumbotron">
-        <h1>Multicloud App</h1>
-        <p>Sprint 1</p>
-    </div>
+    <nav class="navbar navbar-inverse " style="background-color: rgb(68, 118, 212)">
+        <div class="container-fluid">
+          <div class="navbar-header">
+          </div>
+          <ul class="nav navbar-nav">
+            <li>
+                <div class="dropdown">
+                    <button class="btn btn-info dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
+                    <span class="glyphicon glyphicon-menu-hamburger"></span></button>
+                    <ul class="dropdown-menu">
+                      <li><a href="#">Manage Cloud Storage</a></li>
+                      <li><a href="#">File Transfer</a></li>
+                    </ul>
+                  </div> 
+            </li>
+            <a class="navbar-brand" style="color: white">Multicloud</a>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#" style="color: white">Features</a></li>
+            <li><a href="#" style="color: white">Services</a></li>
+            <li>
+                <div class="btn-nav"><a class="btn btn-danger btn-small navbar-btn">Sign Up</a>
+                </div>
+            </li>
+            <li>
+                <div class="btn-nav"><a class="btn btn-info btn-small navbar-btn">Sign In</a>
+                </div>
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <div class="text-center">
+          <img src="/images/multicloud.png" alt="Multicloud Icon"  style="width: 97.75; height: 60.75">
+            <p>Welcome to Multicloud!</p>
+
+            <p>To begin, press the Sign Up button to create an account or if you already have an account, press Sign In.</p>
+
+            <p>Once you have signed in to our app you can manage files between multiple cloud storage services, such as DropBox, Google Drive, OneDrive and Box.</p>
+
+            <p>To associate services with your account, click on the <span class="glyphicon glyphicon-menu-hamburger"></span> button and navigate to the Manage Cloud Storage page.
+            <p>Enter your cloud account details and navigate to the File Transfer page to begin managing files.</p>
+          </div>
 </main>
-
-<footer>
-    <p>Team Yellow</p>
-</footer>
-
 </body>
 </html>
