@@ -1,23 +1,24 @@
 var express = require('express');
 var router = express.Router();
 
+ 
 // mongoose is a API wrapper overtop of mongodb, just like
 // .ADO.Net is a wrapper over raw SQL server interface
-const mongoose = require("mongoose");
+//const mongoose = require("mongoose");
 
-const ToDos = require("../ToDos");
+//const ToDos = require("../ToDos");
 
 // edited to include my non-admin, user level account and PW on mongo atlas
 // and also to include the name of the mongo DB that the collection is in (TaskDB)
-const dbURI =
+//const dbURI =
   //change to team mongo
-  "mongodb+srv://someone:somepw@somecluster.mongodb.net/ToDosDB?retryWrites=true&w=majority";
+ // "mongodb+srv://someone:somepw@somecluster.mongodb.net/ToDosDB?retryWrites=true&w=majority";
 
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true`
 // by default, you need to set it to false.
-mongoose.set('useFindAndModify', false);
+//mongoose.set('useFindAndModify', false);
 
-const options = {
+/* const options = {
   reconnectTries: Number.MAX_VALUE,
   poolSize: 10
 };
@@ -29,18 +30,14 @@ mongoose.connect(dbURI, options).then(
   err => {
     console.log("Error connecting Database instance due to: ", err);
   }
-);
-
-
-
+); */
 /* GET home page. */
 router.get('/', function(req, res) {
   res.sendFile('index.html');
  
 });
-
 /* GET all Todos . */
-router.get('/ToDos', function(req, res) {
+/* router.get('/ToDos', function(req, res) {
   // find {  takes values, but leaving it blank gets all}
   ToDos.find({}, (err, AllToDos) => {
     if (err) {
@@ -51,11 +48,8 @@ router.get('/ToDos', function(req, res) {
   });
 });
 
-
-
-
 /* post a new ToDo and push to Mongo */
-router.post('/NewToDo', function(req, res) {
+/* router.post('/NewToDo', function(req, res) {
 
     let oneNewToDo = new ToDos(req.body);  
     console.log(req.body);
@@ -69,19 +63,18 @@ router.post('/NewToDo', function(req, res) {
       }
     });
 });
-
+ */
 // delete one ToDo
-router.delete('/DeleteToDo/:id', function (req, res) {
+/* router.delete('/DeleteToDo/:id', function (req, res) {
   ToDos.deleteOne({ _id: req.params.id }, (err, note) => { 
     if (err) {
       res.status(404).send(err);
     }
     res.status(200).json({ message: "ToDo successfully deleted" });
   });
-});
-
+}); */
 // update one ToDo
-router.put('/CompleteToDo', function (req, res) {
+/* router.put('/CompleteToDo', function (req, res) {
   var which = (req.body)._id;   // get the -id from the object passed up, ignore rest of it
   ToDos.findOneAndUpdate(
     { _id: which },  
@@ -93,8 +86,8 @@ router.put('/CompleteToDo', function (req, res) {
     }
     res.status(200).json(todo);
     })
-  });
-
+  });  */
+  
   // for this version, we will keep data on server in an array
 heroArray = [];
 
@@ -118,6 +111,21 @@ heroArray.push( new Hero (19, 'Magma', "Fire") );
 heroArray.push( new Hero (20, 'Tornado', "Invisible") );
 
 
+function User(name,lastname,username,password){
+  this.name = name,
+  this.lastname = lastname,
+  this.password = password,
+  this.username = username
+}
+
+let usersArray = []
+
+usersArray.push(new User('jack', 'Broadly','jkbrdl','52413'))
+
+router.get('/users', (req,res) => {
+  console.log(usersArray)
+  res.status(200).json(usersArray)
+})
 router.get('/heroes', function(req, res) {
   res.status(200).json(heroArray);
     console.log(heroArray);
@@ -139,9 +147,6 @@ router.get('/heroes/:id', function(req, res) {
       }
 
   });
-
-
-
   router.put('/heroes/:id', function(req, res) {
     var changedHero = req.body; 
    for(var i=0; i < heroArray.length; i++)
@@ -159,9 +164,6 @@ router.get('/heroes/:id', function(req, res) {
      res.status(500).send(err);
    }
  });
-
-
-
 // delete is used to delete existing object
 router.delete('/heroes/:id', function(req, res) {
   for(var i=0; i < heroArray.length; i++)
@@ -177,9 +179,6 @@ router.delete('/heroes/:id', function(req, res) {
     res.status(500).send(err);
   }
 });
-
-
-
 router.post("/heroes", function(req, res) {
 
    // sort by id (need to create a new, unique id)
@@ -192,8 +191,6 @@ router.post("/heroes", function(req, res) {
    res.status(200).json(newHero);  // returns the new hero which the observable 
   // uses to update the client side array so the display looks correct.
 });
-
-
 // router.post("/heroes", function(req, res) {
 
 //   // sort by id (need to create a new, unique id)
