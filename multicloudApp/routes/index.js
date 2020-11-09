@@ -4,21 +4,20 @@ var router = express.Router();
  
 // mongoose is a API wrapper overtop of mongodb, just like
 // .ADO.Net is a wrapper over raw SQL server interface
-//const mongoose = require("mongoose");
+const mongoose = require("mongoose");
 
-//const ToDos = require("../ToDos");
+const MCUsers = require("../McUsers");
 
 // edited to include my non-admin, user level account and PW on mongo atlas
 // and also to include the name of the mongo DB that the collection is in (TaskDB)
-//const dbURI =
-  //change to team mongo
- // "mongodb+srv://someone:somepw@somecluster.mongodb.net/ToDosDB?retryWrites=true&w=majority";
+const dbURI =
+  "mongodb+srv://yelloteam:bcuser123456@cluster0.08j1d.mongodb.net/MultiCloudDB?retryWrites=true&w=majority";
 
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true`
 // by default, you need to set it to false.
-//mongoose.set('useFindAndModify', false);
+mongoose.set('useFindAndModify', false);
 
-/* const options = {
+const options = {
   reconnectTries: Number.MAX_VALUE,
   poolSize: 10
 };
@@ -30,40 +29,56 @@ mongoose.connect(dbURI, options).then(
   err => {
     console.log("Error connecting Database instance due to: ", err);
   }
-); */
+);
+
+function User(name,lastname,username,password){
+  this.name = name,
+  this.lastname = lastname,
+  this.password = password,
+  this.username = username
+};
+
 /* GET home page. */
 router.get('/', function(req, res) {
   res.sendFile('index.html');
  
 });
-/* GET all Todos . */
-/* router.get('/ToDos', function(req, res) {
-  // find {  takes values, but leaving it blank gets all}
-  ToDos.find({}, (err, AllToDos) => {
+
+/* GET all Users. */
+router.get('/AllMCUsers', function(req, res) {
+  MCUsers.find({}, (err, result) => {
     if (err) {
       console.log(err);
       res.status(500).send(err);
     }
-    res.status(200).json(AllToDos);
+    else {
+      console.log(result);
+      res.status(201).json(result);
+    }
   });
 });
 
-/* post a new ToDo and push to Mongo */
-/* router.post('/NewToDo', function(req, res) {
-
-    let oneNewToDo = new ToDos(req.body);  
+/* post a new User and push to Mongo */
+router.post('/MCUser', function(req, res) {
+    let oneNewMCUser = new MCUsers({
+      name: req.body.name,
+      lastname: req.body.lastname,
+      password: req.body.password,
+      username: req.body.username
+    });  
     console.log(req.body);
-    oneNewToDo.save((err, todo) => {
+    oneNewMCUser.save((err, result) => {
       if (err) {
+        console.log(err);
         res.status(500).send(err);
       }
       else {
-      console.log(todo);
-      res.status(201).json(todo);
+      console.log(result);
+      res.status(201).json(result);
       }
     });
 });
- */
+
 // delete one ToDo
 /* router.delete('/DeleteToDo/:id', function (req, res) {
   ToDos.deleteOne({ _id: req.params.id }, (err, note) => { 
@@ -73,6 +88,7 @@ router.get('/', function(req, res) {
     res.status(200).json({ message: "ToDo successfully deleted" });
   });
 }); */
+
 // update one ToDo
 /* router.put('/CompleteToDo', function (req, res) {
   var which = (req.body)._id;   // get the -id from the object passed up, ignore rest of it
@@ -110,22 +126,16 @@ heroArray.push( new Hero (18, 'Dr IQ', "X-Ray Vision") );
 heroArray.push( new Hero (19, 'Magma', "Fire") );
 heroArray.push( new Hero (20, 'Tornado', "Invisible") );
 
+let usersArray = [];
 
-function User(name,lastname,username,password){
-  this.name = name,
-  this.lastname = lastname,
-  this.password = password,
-  this.username = username
-}
-
-let usersArray = []
-
-usersArray.push(new User('jack', 'Broadly','jkbrdl','52413'))
+usersArray.push(new User('jack', 'Broadly','jkbrdl','52413'));
+usersArray.push(new User('tom', 'Thumb','qwerty','lilTom'));
 
 router.get('/users', (req,res) => {
   console.log(usersArray)
   res.status(200).json(usersArray)
-})
+});
+
 router.get('/heroes', function(req, res) {
   res.status(200).json(heroArray);
     console.log(heroArray);
