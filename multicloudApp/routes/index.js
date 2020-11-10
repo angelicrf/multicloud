@@ -111,6 +111,36 @@ router.post('/MCUser', function(req, res) {
   });
 });
 
+/* update one User */
+router.patch('/UpdateMCUser/:id', function (req, res) {
+  MCUsers.findById({ _id: req.params.id }, async (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      if (req.body.password) {
+        result.password = req.body.password
+      }
+      if (req.body.lastname) {
+        result.lastname = req.body.lastname
+      }
+      if (req.body.name) {
+        result.name = req.body.name
+      }
+      const newResult = await result.save();
+      if (newResult === result) {
+        console.log(newResult);
+        res.status(200).json(newResult);
+      }
+      else {
+        res.status(404);
+        res.send({ errot: "Update save failed!" });
+      }
+    }
+  });
+});
+
 /* delete one User */
 /* router.delete('/DeleteMCUser/:id', function (req, res) {
   MCUsers.deleteOne({ _id: req.params.id }, (err, result) => { 
@@ -126,25 +156,12 @@ router.post('/MCUser', function(req, res) {
   });
 }); */
 
-/* update one User */
-router.put('/UpdateMCUser', function (req, res) {
-  let which = req.body._id;   // get the _id from the object passed up
-  MCUsers.findOneAndUpdate(
-    { _id: which },  
-    { completed: true },        // ignore the value of the object's completed prop, just force it to true
-    { new: false },             // if it does not find one, do not just make up a new one.
-    (err, result) => {
-      if (err) {
-        console.log(err);
-        res.status(500).send(err);
-      }
-      else {
-        console.log(result);
-        res.status(200).json(result);
-      }
-    })
-  });
-  
+
+
+
+
+
+
   // for this version, we will keep data on server in an array
 heroArray = [];
 
