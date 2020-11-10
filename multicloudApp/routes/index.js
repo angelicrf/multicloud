@@ -18,6 +18,7 @@ const dbURI =
 mongoose.set('useFindAndModify', false);
 
 const options = {
+  useNewUrlParser: true,
   reconnectTries: Number.MAX_VALUE,
   poolSize: 10
 };
@@ -41,7 +42,7 @@ function User(name,lastname,username,password){
 /* GET home page. */
 router.get('/', function(req, res) {
   res.sendFile('index.html');
- 
+
 });
 
 /* GET all Users. */
@@ -58,51 +59,91 @@ router.get('/AllMCUsers', function(req, res) {
   });
 });
 
+/* GET one User by ID */
+router.get('/MCUserByID/:id', function (req, res) {
+  MCUsers.findById({ _id: req.params.id }, (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      console.log(result);
+      res.status(201).json(result);
+    }
+  });
+});
+
+/* GET one User by UserName and Password */
+router.get('/MCUserByUsrNmPwd', function (req, res) {
+  MCUsers.findOne({
+    username: req.body.username,
+    password: req.body.password
+  }, (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      console.log(result);
+      res.status(201).json(result);
+    }
+  });
+});
+
 /* post a new User and push to Mongo */
 router.post('/MCUser', function(req, res) {
-    let oneNewMCUser = new MCUsers({
-      name: req.body.name,
-      lastname: req.body.lastname,
-      password: req.body.password,
-      username: req.body.username
-    });  
-    console.log(req.body);
-    oneNewMCUser.save((err, result) => {
+  let oneNewMCUser = new MCUsers({
+    name: req.body.name,
+    lastname: req.body.lastname,
+    password: req.body.password,
+    username: req.body.username
+  });  
+  console.log(req.body);
+  oneNewMCUser.save((err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+    console.log(result);
+    res.status(201).json(result);
+    }
+  });
+});
+
+/* delete one User */
+/* router.delete('/DeleteMCUser/:id', function (req, res) {
+  MCUsers.deleteOne({ _id: req.params.id }, (err, result) => { 
+    if (err) {
+      console.log(err);
+      res.status(404).send(err);
+    }
+    else {
+      console.log("MCUser successfully deleted");
+      console.log(result);
+      res.status(200).json({ message: "MCUser successfully deleted" });
+    }
+  });
+}); */
+
+/* update one User */
+router.put('/UpdateMCUser', function (req, res) {
+  let which = req.body._id;   // get the _id from the object passed up
+  MCUsers.findOneAndUpdate(
+    { _id: which },  
+    { completed: true },        // ignore the value of the object's completed prop, just force it to true
+    { new: false },             // if it does not find one, do not just make up a new one.
+    (err, result) => {
       if (err) {
         console.log(err);
         res.status(500).send(err);
       }
       else {
-      console.log(result);
-      res.status(201).json(result);
+        console.log(result);
+        res.status(200).json(result);
       }
-    });
-});
-
-// delete one ToDo
-/* router.delete('/DeleteToDo/:id', function (req, res) {
-  ToDos.deleteOne({ _id: req.params.id }, (err, note) => { 
-    if (err) {
-      res.status(404).send(err);
-    }
-    res.status(200).json({ message: "ToDo successfully deleted" });
-  });
-}); */
-
-// update one ToDo
-/* router.put('/CompleteToDo', function (req, res) {
-  var which = (req.body)._id;   // get the -id from the object passed up, ignore rest of it
-  ToDos.findOneAndUpdate(
-    { _id: which },  
-    { completed: true },   // ignore the value of the object's completed prop, just force it to true
-    { new: false }, // if it does not find one, do not just make up a new one.
-    (err, todo) => {
-      if (err) {
-        res.status(500).send(err);
-    }
-    res.status(200).json(todo);
     })
-  });  */
+  });
   
   // for this version, we will keep data on server in an array
 heroArray = [];
@@ -129,7 +170,7 @@ heroArray.push( new Hero (20, 'Tornado', "Invisible") );
 let usersArray = [];
 
 usersArray.push(new User('jack', 'Broadly','jkbrdl','52413'));
-usersArray.push(new User('tom', 'Thumb','qwerty','lilTom'));
+usersArray.push(new User('tom', 'Thumb','lilTom','qwerty'));
 
 router.get('/users', (req,res) => {
   console.log(usersArray)
