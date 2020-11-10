@@ -19,7 +19,7 @@ mongoose.set('useFindAndModify', false);
 
 const options = {
   useNewUrlParser: true,
-  reconnectTries: Number.MAX_VALUE,
+  useUnifiedTopology: true,
   poolSize: 10
 };
 
@@ -92,13 +92,15 @@ router.get('/MCUserByUsrNmPwd', function (req, res) {
 
 /* post a new User and push to Mongo */
 router.post('/MCUser', function(req, res) {
+  console.log("MCUser called " + req.body.name);
+
   let oneNewMCUser = new MCUsers({
     name: req.body.name,
     lastname: req.body.lastname,
     password: req.body.password,
     username: req.body.username
   });  
-  console.log(req.body);
+  
   oneNewMCUser.save((err, result) => {
     if (err) {
       console.log(err);
