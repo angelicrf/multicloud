@@ -89,7 +89,18 @@ router.get('/MCUserByUsrNmPwd', function (req, res) {
     }
   });
 });
-
+//UserMongoCR SignIn
+router.get('/UserMongoCR', function (req, res) {
+  console.log('userMongoCR called')
+  MCUsers.find({}, (err, AllClients) => {
+    console.log('userMongoCR called2' + AllClients)
+    if (err) {
+      console.log("Error from userMongoCR" + err);
+      res.status(500).send(err);
+    }
+    res.status(200).json(AllClients);
+  })
+})
 /* post a new User and push to Mongo */
 router.post('/MCUser', function(req, res) {
   console.log("MCUser called " + req.body.name);
@@ -97,8 +108,9 @@ router.post('/MCUser', function(req, res) {
   let oneNewMCUser = new MCUsers({
     name: req.body.name,
     lastname: req.body.lastname,
-    password: req.body.password,
-    username: req.body.username
+    username: req.body.username,
+    email: req.body.email,
+    password: req.body.password
   });  
   
   oneNewMCUser.save((err, result) => {
