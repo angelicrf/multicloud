@@ -32,17 +32,17 @@ mongoose.connect(dbURI, options).then(
   }
 );
 
-function User(name,lastname,username,password){
+function User(name,lastname,username,email,password){
   this.name = name,
   this.lastname = lastname,
-  this.password = password,
-  this.username = username
+  this.username = username,
+  this.email = email,
+  this.password = password
 };
 
 /* GET home page. */
 router.get('/', function(req, res) {
   res.sendFile('index.html');
-
 });
 
 /* GET all Users. */
@@ -169,12 +169,6 @@ router.patch('/UpdateMCUser/:id', function (req, res) {
     }
   });
 }); */
-
-
-
-
-
-
 
   // for this version, we will keep data on server in an array
 heroArray = [];
