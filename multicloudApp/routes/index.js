@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-
+let HoldUserData = []
  
 // mongoose is a API wrapper overtop of mongodb, just like
 // .ADO.Net is a wrapper over raw SQL server interface
@@ -72,9 +72,22 @@ router.get('/MCUserByID/:id', function (req, res) {
     }
   });
 });
-
+//MCUserInfo SignIn
+router.post('/MCUserInfo', function (req, res) {
+  console.log('MCUserInfo called')
+  let holdUserName = req.body.username
+  let holdPassword = req.body.password
+  HoldUserData.push(holdUserName,holdPassword)
+  res.json({username: holdUserName, password:holdPassword})
+  return HoldUserData
+})
 /* GET one User by UserName and Password */
 router.get('/MCUserByUsrNmPwd', function (req, res) {
+  console.log("username from node " + HoldUserData[0])
+  console.log("password from node " + HoldUserData[1])
+  req.body.username = HoldUserData[0]
+  req.body.password = HoldUserData[1]
+  
   MCUsers.findOne({
     username: req.body.username,
     password: req.body.password
@@ -89,18 +102,7 @@ router.get('/MCUserByUsrNmPwd', function (req, res) {
     }
   });
 });
-//UserMongoCR SignIn
-router.get('/UserMongoCR', function (req, res) {
-  console.log('userMongoCR called')
-  MCUsers.find({}, (err, AllClients) => {
-    console.log('userMongoCR called2' + AllClients)
-    if (err) {
-      console.log("Error from userMongoCR" + err);
-      res.status(500).send(err);
-    }
-    res.status(200).json(AllClients);
-  })
-})
+
 /* post a new User and push to Mongo */
 router.post('/MCUser', function(req, res) {
   console.log("MCUser called " + req.body.name);
