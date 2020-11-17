@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
-let HoldUserData = []
+
+let HoldUserData = [];
+let LoggedInUserID = "";
  
 // mongoose is a API wrapper overtop of mongodb, just like
 // .ADO.Net is a wrapper over raw SQL server interface
@@ -49,34 +51,46 @@ router.get('/', function(req, res) {
 
 /* GET all Users. */
 router.get('/AllMCUsers', function(req, res) {
-  console.log('AllMCUsers called');
+  if (LoggedInUserID === req.body.id) {
+    console.log('AllMCUsers called');
 
-  MCUsers.find({}, (err, result) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send(err);
-    }
-    else {
-      console.log(result);
-      res.status(201).json(result);
-    }
-  });
+    MCUsers.find({}, (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send(err);
+      }
+      else {
+        console.log(result);
+        res.status(201).json(result);
+      }
+    });
+  }
+  else {
+    console.log('REQ.body.id does not match logged in user ID');
+    res.status(500).send('REQ.body.id does not match logged in user ID');
+  }
 });
 
 /* GET one User by ID */
 router.get('/MCUserByID', function (req, res) {
-  console.log('MCUserByID called');
+  if (LoggedInUserID === req.body.id) {
+    console.log('MCUserByID called');
 
-  MCUsers.findById({ _id: req.body.id }, (err, result) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send(err);
-    }
-    else {
-      console.log(result);
-      res.status(201).json(result);
-    }
-  });
+    MCUsers.findById({ _id: req.body.id }, (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send(err);
+      }
+      else {
+        console.log(result);
+        res.status(201).json(result);
+      }
+    });
+  }
+  else {
+    console.log('REQ.body.id does not match logged in user ID');
+    res.status(500).send('REQ.body.id does not match logged in user ID');
+  }
 });
 
 /* MCUserInfo SignIn */
@@ -106,6 +120,7 @@ router.get('/MCUserByUsrNmPwd', function (req, res) {
       res.status(500).send(err);
     }
     else {
+      LoggedInUserID = result.id;
       console.log(result);
       res.status(201).json(result);
     }
@@ -130,67 +145,94 @@ router.post('/MCUser', function(req, res) {
       res.status(500).send(err);
     }
     else {
-    console.log(result);
-    res.status(201).json(result);
+      LoggedInUserID = result.id;
+      console.log(result);
+      res.status(201).json(result);
     }
   });
 });
 
 /* update one User */
 router.patch('/UpdateMCUser', function (req, res) {
-  console.log('UpdateMCUser called');
+  if (LoggedInUserID === req.body.id) {
+    console.log('UpdateMCUser called');
 
-  MCUsers.findById({ _id: req.body.id }, async (err, result) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send(err);
-    }
-    else {
-      if (req.body.password) {
-        result.password = req.body.password
-      }
-      if (req.body.email) {
-        result.email = req.body.email
-      }
-      if (req.body.lastname) {
-        result.lastname = req.body.lastname
-      }
-      if (req.body.name) {
-        result.name = req.body.name
-      }
-      const newResult = await result.save();
-      if (newResult === result) {
-        console.log(newResult);
-        res.status(200).json(newResult);
+    MCUsers.findById({ _id: req.body.id }, async (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send(err);
       }
       else {
-        res.status(404).json({ error: "Update save failed!" });
+        if (req.body.password) {
+          result.password = req.body.password
+        }
+        if (req.body.email) {
+          result.email = req.body.email
+        }
+        if (req.body.lastname) {
+          result.lastname = req.body.lastname
+        }
+        if (req.body.name) {
+          result.name = req.body.name
+        }
+        const newResult = await result.save();
+        if (newResult === result) {
+          console.log(newResult);
+          res.status(200).json(newResult);
+        }
+        else {
+          res.status(404).json({ error: "Update save failed!" });
+        }
       }
-    }
-  });
+    });
+  }
+  else {
+    console.log('REQ.body.id does not match logged in user ID');
+    res.status(500).send('REQ.body.id does not match logged in user ID');
+  }
 });
 
 /* delete one User */
 router.delete('/DeleteMCUser', function (req, res) {
-  console.log('DeleteMCUser called');
+  if (LoggedInUserID === req.body.id) {
+    console.log('DeleteMCUser called');
 
-  MCUsers.findById({ _id: req.body.id }, async (err, result) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send(err);
-    }
-    else {
-      const newResult = await MCUsers.deleteOne({ username: result.username, password: result.password });
-      if (newResult.n == 1 && newResult.ok == 1 && newResult.deletedCount == 1) {
-        console.log(newResult);
-        console.log("MCUser successfully deleted");
-        res.status(200).json(newResult);
+    MCUsers.findById({ _id: req.body.id }, async (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send(err);
       }
       else {
-        res.status(404).json({ error: "Delete failed!" });
+        const newResult = await MCUsers.deleteOne({ username: result.username, password: result.password });
+        if (newResult.n == 1 && newResult.ok == 1 && newResult.deletedCount == 1) {
+          console.log(newResult);
+          console.log("MCUser successfully deleted");
+          res.status(200).json(newResult);
+        }
+        else {
+          res.status(404).json({ error: "Delete failed!" });
+        }
       }
-    }
-  });
+    });
+  }
+  else {
+    console.log('REQ.body.id does not match logged in user ID');
+    res.status(500).send('REQ.body.id does not match logged in user ID');
+  }
+});
+
+/* log out the user */
+router.get('/LogOutMCUser', function (req, res) {
+  if (LoggedInUserID === req.body.id) {
+    console.log(':ogOutMCUser called');
+
+    LoggedInUserID = "";
+    HoldUserData.splice(0, HoldUserData.length);
+  }
+  else {
+    console.log('REQ.body.id does not match logged in user ID');
+    res.status(500).send('REQ.body.id does not match logged in user ID');
+  }
 });
 
 module.exports = router;
