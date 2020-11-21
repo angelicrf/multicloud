@@ -228,6 +228,7 @@ router.get('/LogOutMCUser', function (req, res) {
 
     LoggedInUserID = "";
     HoldUserData.splice(0, HoldUserData.length);
+    return LoggedInUserID;
   }
   else {
     console.log('REQ.body.id does not match logged in user ID');
