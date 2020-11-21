@@ -123,6 +123,7 @@ router.get('/MCUserByUsrNmPwd', function (req, res) {
       LoggedInUserID = result.id;
       console.log(result);
       res.status(201).json(result);
+      return LoggedInUserID;
     }
   });
 });
@@ -145,7 +146,6 @@ router.post('/MCUser', function(req, res) {
       res.status(500).send(err);
     }
     else {
-      LoggedInUserID = result.id;
       console.log(result);
       res.status(201).json(result);
     }
