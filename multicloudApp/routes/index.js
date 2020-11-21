@@ -3,20 +3,12 @@ var router = express.Router();
 
 let HoldUserData = [];
 let LoggedInUserID = "";
- 
-// mongoose is a API wrapper overtop of mongodb, just like
-// .ADO.Net is a wrapper over raw SQL server interface
+
 const mongoose = require("mongoose");
-
 const MCUsers = require("../McUsers");
-
-// edited to include my non-admin, user level account and PW on mongo atlas
-// and also to include the name of the mongo DB that the collection is in (TaskDB)
+const MCClient = require("../McCloud");
 const dbURI =
   "mongodb+srv://yelloteam:bcuser123456@cluster0.08j1d.mongodb.net/MultiCloudDB?retryWrites=true&w=majority";
-
-// Make Mongoose use `findOneAndUpdate()`. Note that this option is `true`
-// by default, you need to set it to false.
 mongoose.set('useFindAndModify', false);
 
 const options = {
@@ -191,7 +183,26 @@ router.patch('/UpdateMCUser', function (req, res) {
     res.status(500).send('REQ.body.id does not match logged in user ID');
   }
 });
+//post Google drive client data to McCloud
+router.post('/MCGdClient', function(req, res) {
+  console.log("MCGdClient called " + req.body.gdname);
 
+  let oneNewMCClient = new MCClient({
+    gdname: req.body.gdname,
+    gdemail: req.body.gdemail,
+    usermongoid: req.body.usermongoid
+  });  
+  oneNewMCClient.save((err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+    console.log(result);
+    res.status(201).json(result);
+    }
+  });
+});
 /* delete one User */
 router.delete('/DeleteMCUser', function (req, res) {
   if (LoggedInUserID === req.body.id) {
