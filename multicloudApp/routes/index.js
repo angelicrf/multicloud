@@ -97,6 +97,7 @@ router.get('/MCUserByID', function (req, res) {
 router.post('/MCUserInfo', function (req, res) {
   console.log('MCUserInfo called');
 
+  HoldUserData.splice(0, HoldUserData.length);
   let holdUserName = req.body.username;
   let holdPassword = req.body.password;
   HoldUserData.push(holdUserName,holdPassword);
@@ -224,10 +225,9 @@ router.delete('/DeleteMCUser', function (req, res) {
 /* log out the user */
 router.get('/LogOutMCUser', function (req, res) {
   if (LoggedInUserID === req.body.id) {
-    console.log(':ogOutMCUser called');
+    console.log('LogOutMCUser called');
 
     LoggedInUserID = "";
-    HoldUserData.splice(0, HoldUserData.length);
     return LoggedInUserID;
   }
   else {
