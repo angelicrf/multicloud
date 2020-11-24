@@ -4,14 +4,13 @@ var router = express.Router();
 let HoldUserData = [];
 let LoggedInUserID = "";
  
-// mongoose is a API wrapper overtop of mongodb, just like
-// .ADO.Net is a wrapper over raw SQL server interface
+// mongoose is a API wrapper overtop of mongodb
 const mongoose = require("mongoose");
 
 const MCUsers = require("../McUsers");
+const MCClient = require("../McCloud");
 
-// edited to include my non-admin, user level account and PW on mongo atlas
-// and also to include the name of the mongo DB that the collection is in (TaskDB)
+// mongodb connection string
 const dbURI =
   "mongodb+srv://yelloteam:bcuser123456@cluster0.08j1d.mongodb.net/MultiCloudDB?retryWrites=true&w=majority";
 
@@ -121,12 +120,12 @@ router.get('/MCUserByUsrNmPwd', function (req, res) {
       res.status(500).send(err);
     }
     else {
-      LoggedInUserID = result.id;
       console.log(result);
       res.status(201).json(result);
-      return LoggedInUserID;
+      LoggedInUserID = result.id;
     }
   });
+  return LoggedInUserID;
 });
 
 /* post a new User and push to Mongo */
@@ -195,10 +194,10 @@ router.patch('/UpdateMCUser', function (req, res) {
 
 /* delete one User */
 router.delete('/DeleteMCUser', function (req, res) {
-  if (LoggedInUserID === req.body.id) {
+  if (LoggedInUserID !== '' || LoggedInUserID !== null) {
     console.log('DeleteMCUser called');
 
-    MCUsers.findById({ _id: req.body.id }, async (err, result) => {
+    MCUsers.findById({ _id: LoggedInUserID }, async (err, result) => {
       if (err) {
         console.log(err);
         res.status(500).send(err);
@@ -224,16 +223,112 @@ router.delete('/DeleteMCUser', function (req, res) {
 
 /* log out the user */
 router.get('/LogOutMCUser', function (req, res) {
-  if (LoggedInUserID === req.body.id) {
-    console.log('LogOutMCUser called');
+  console.log('LogOutMCUser called ' + JSON.stringify(req.body) + 
+  ' LoggedInUserID ' + LoggedInUserID + ' HoldUserData ' + HoldUserData);
 
+  if (LoggedInUserID !== '' || LoggedInUserID !== null) {
     LoggedInUserID = "";
-    return LoggedInUserID;
+    HoldUserData.splice(0, HoldUserData.length);
+
+    console.log('HoldUserData ' + HoldUserData);
+    res.status(200).send('user logged out successfully');
   }
   else {
     console.log('REQ.body.id does not match logged in user ID');
     res.status(500).send('REQ.body.id does not match logged in user ID');
   }
+  return LoggedInUserID;
+});
+
+/* post Google drive client data to McCloud */
+router.post('/MCGdClient', function(req, res) {
+  console.log("MCGdClient called " + req.body.gdname);
+
+  let oneNewMCClient = new MCClient({
+    gdname: req.body.gdname,
+    gdemail: req.body.gdemail,
+    usermongoid: req.body.usermongoid
+  });
+
+  oneNewMCClient.save((err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      console.log(result);
+      res.status(201).json(result);
+    }
+  });
+});
+
+/* GET all cloud service credentials for user */
+router.get('/MCClientData', function(req, res) {
+  console.log('MCClientData called');
+
+  MCClient.findOne({ usermongoid: req.body.usermongoid }, (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      console.log(result);
+      res.status(201).json(result);
+    }
+  });
+});
+
+/* DELETE *ALL* of user's cloud service credentials */
+router.delete('/MCClientDeleteData', function(req, res) {
+  console.log('MCClientDeleteData called ' + JSON.stringify(req.body));
+
+  MCClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      const newResult = await MCClient.deleteOne({ usermongoid: result.usermongoid, _id: result.id });
+      if (newResult.n == 1 && newResult.ok == 1 && newResult.deleteCount == 1) {
+        console.log(newResult);
+        console.log('MCClient successfully deleted ALL credentials');
+        res,status(200).json(newResult);
+      }
+      else {
+        console.log('MCClient delete FAILED!');
+        res.status(404).json({ error: 'Delete failed!'});
+      }
+    }
+  });
+});
+
+/* UPDATE user's cloud service credentials */
+router.patch('/MCClientUpdateData', function (req, res) {
+  console.log('MCClientUpdateData called ' + JSON.stringify(req.body));
+
+  MCClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      if (req.body.gdname) {
+        result.gdname = req.body.gdname
+      }
+      if (req.body.gdemail) {
+        result.gdemail = req.body.gdemail
+      }
+      const newResult = await result.save();
+      if (newResult === result) {
+        console.log(newResult);
+        res.status(200).json(newResult);
+      }
+      else {
+        console.log('MCClient update save FAILED!');
+        res.status(404).json({ error: 'MCClient update save FAILED!' });
+      }
+    }
+  });
 });
 
 module.exports = router;
