@@ -3,6 +3,9 @@ var router = express.Router();
 
 let HoldUserData = [];
 let LoggedInUserID = "";
+
+// fs for reading local files
+const fs = require('fs');
  
 // mongoose is a API wrapper overtop of mongodb
 const mongoose = require("mongoose");
@@ -327,6 +330,26 @@ router.patch('/MCClientUpdateData', function (req, res) {
         console.log('MCClient update save FAILED!');
         res.status(404).json({ error: 'MCClient update save FAILED!' });
       }
+    }
+  });
+});
+
+/* POST files from local file system when given a path */
+router.post('/Files', function(req, res) {
+  console.log('Files called');
+
+  fs.readdir(req.body.path, function (err, files) {
+    //handling error
+    if (err) {
+      res.status(500).send(err);
+      console.log('Unable to scan directory: ' + err);
+    } 
+    else {
+      //listing all files using forEach
+      files.forEach(function (file) {
+        console.log(file); 
+      });
+      res.status(201).json(files);
     }
   });
 });
