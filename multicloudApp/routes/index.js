@@ -4,9 +4,16 @@ var router = express.Router();
 let HoldUserData = [];
 let LoggedInUserID = "";
 
+// fs for reading local files
+const fs = require('fs');
+ 
+// mongoose is a API wrapper overtop of mongodb
 const mongoose = require("mongoose");
+
 const MCUsers = require("../McUsers");
 const MCClient = require("../McCloud");
+
+// mongodb connection string
 const dbURI =
   "mongodb+srv://yelloteam:bcuser123456@cluster0.08j1d.mongodb.net/MultiCloudDB?retryWrites=true&w=majority";
 mongoose.set('useFindAndModify', false);
@@ -89,6 +96,7 @@ router.get('/MCUserByID', function (req, res) {
 router.post('/MCUserInfo', function (req, res) {
   console.log('MCUserInfo called');
 
+  HoldUserData.splice(0, HoldUserData.length);
   let holdUserName = req.body.username;
   let holdPassword = req.body.password;
   HoldUserData.push(holdUserName,holdPassword);
@@ -114,10 +122,17 @@ router.get('/MCUserByUsrNmPwd', function (req, res) {
     else {
       console.log(result);
       res.status(201).json(result);
+<<<<<<< HEAD
       LoggedInUserID = result.id;     
     }
   });
   return LoggedInUserID
+=======
+      LoggedInUserID = result.id;
+    }
+  });
+  return LoggedInUserID;
+>>>>>>> sprint-6
 });
 
 /* post a new User and push to Mongo */
@@ -138,7 +153,6 @@ router.post('/MCUser', function(req, res) {
       res.status(500).send(err);
     }
     else {
-      LoggedInUserID = result.id;
       console.log(result);
       res.status(201).json(result);
     }
@@ -206,7 +220,11 @@ router.post('/MCGdClient', function(req, res) {
 });
 /* delete one User */
 router.delete('/DeleteMCUser', function (req, res) {
+<<<<<<< HEAD
   if (LoggedInUserID !== '' || LoggedInUserID !== null ) {
+=======
+  if (LoggedInUserID !== '' || LoggedInUserID !== null) {
+>>>>>>> sprint-6
     console.log('DeleteMCUser called');
 
     MCUsers.findById({ _id: LoggedInUserID }, async (err, result) => {
@@ -235,6 +253,7 @@ router.delete('/DeleteMCUser', function (req, res) {
 
 /* log out the user */
 router.get('/LogOutMCUser', function (req, res) {
+<<<<<<< HEAD
   // checkout req.body
   console.log('LogOutMCUser called ' + JSON.stringify(req.body) +
    'LoggedInUserID ' + LoggedInUserID + 'HoldUserData ' +  HoldUserData);
@@ -245,11 +264,134 @@ router.get('/LogOutMCUser', function (req, res) {
     // send result to avoid having a pending promise
     res.status(200).send('user logged out successfully');
     console.log('HoldUserData ' + HoldUserData)
+=======
+  console.log('LogOutMCUser called ' + JSON.stringify(req.body) + 
+  ' LoggedInUserID ' + LoggedInUserID + ' HoldUserData ' + HoldUserData);
+
+  if (LoggedInUserID !== '' || LoggedInUserID !== null) {
+    LoggedInUserID = "";
+    HoldUserData.splice(0, HoldUserData.length);
+
+    console.log('HoldUserData ' + HoldUserData);
+    res.status(200).send('user logged out successfully');
+>>>>>>> sprint-6
   }
   else {
     console.log('REQ.body.id does not match logged in user ID');
     res.status(500).send('REQ.body.id does not match logged in user ID');
   }
+  return LoggedInUserID;
+});
+
+/* post Google drive client data to McCloud */
+router.post('/MCGdClient', function(req, res) {
+  console.log("MCGdClient called " + req.body.gdname);
+
+  let oneNewMCClient = new MCClient({
+    gdname: req.body.gdname,
+    gdemail: req.body.gdemail,
+    usermongoid: req.body.usermongoid
+  });
+
+  oneNewMCClient.save((err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      console.log(result);
+      res.status(201).json(result);
+    }
+  });
+});
+
+/* GET all cloud service credentials for user */
+router.get('/MCClientData', function(req, res) {
+  console.log('MCClientData called');
+
+  MCClient.findOne({ usermongoid: req.body.usermongoid }, (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      console.log(result);
+      res.status(201).json(result);
+    }
+  });
+});
+
+/* DELETE *ALL* of user's cloud service credentials */
+router.delete('/MCClientDeleteData', function(req, res) {
+  console.log('MCClientDeleteData called ' + JSON.stringify(req.body));
+
+  MCClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      const newResult = await MCClient.deleteOne({ usermongoid: result.usermongoid, _id: result.id });
+      if (newResult.n == 1 && newResult.ok == 1 && newResult.deleteCount == 1) {
+        console.log(newResult);
+        console.log('MCClient successfully deleted ALL credentials');
+        res,status(200).json(newResult);
+      }
+      else {
+        console.log('MCClient delete FAILED!');
+        res.status(404).json({ error: 'Delete failed!'});
+      }
+    }
+  });
+});
+
+/* UPDATE user's cloud service credentials */
+router.patch('/MCClientUpdateData', function (req, res) {
+  console.log('MCClientUpdateData called ' + JSON.stringify(req.body));
+
+  MCClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      if (req.body.gdname) {
+        result.gdname = req.body.gdname
+      }
+      if (req.body.gdemail) {
+        result.gdemail = req.body.gdemail
+      }
+      const newResult = await result.save();
+      if (newResult === result) {
+        console.log(newResult);
+        res.status(200).json(newResult);
+      }
+      else {
+        console.log('MCClient update save FAILED!');
+        res.status(404).json({ error: 'MCClient update save FAILED!' });
+      }
+    }
+  });
+});
+
+/* POST files from local file system when given a path */
+router.post('/Files', function(req, res) {
+  console.log('Files called');
+
+  fs.readdir(req.body.path, function (err, files) {
+    //handling error
+    if (err) {
+      res.status(500).send(err);
+      console.log('Unable to scan directory: ' + err);
+    } 
+    else {
+      //listing all files using forEach
+      files.forEach(function (file) {
+        console.log(file); 
+      });
+      res.status(201).json(files);
+    }
+  });
 });
 
 module.exports = router;
