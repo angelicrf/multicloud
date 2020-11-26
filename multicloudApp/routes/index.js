@@ -6,7 +6,7 @@ let LoggedInUserID = "";
 
 // fs for reading local files
 const fs = require('fs');
- 
+const child = require('child_process');
 // mongoose is a API wrapper overtop of mongodb
 const mongoose = require("mongoose");
 
@@ -499,6 +499,29 @@ router.patch('/DbClientUpdateData', function (req, res) {
       }
     }
   });
+});
+/* Post URl code generated from DropBox to create access_token */
+router.post('/ShowData', function (req, res) {
+  res.header('Access-Control-Allow-Origin', '*');
+  console.log("req body from node " + JSON.stringify(req.body.saveCode))
+  let codeData = req.body.saveCode;
+  
+  child.exec(
+      `curl https://api.dropbox.com/oauth2/token \
+              -d code=${codeData} \
+              -d grant_type=authorization_code \
+              -d redirect_uri=http://localhost:4200/filetransfer \
+              -u 4kbv0so8hjs83lf:hzrap940rcg09t1`
+   ,(stdout, stderr) => {       
+      if(stderr.length > 0){
+          sendToAngular = stderr; 
+          //
+          sendToAngularAccessToken = stderr.toString()
+          console.log("the stdErr is " + stderr)               
+      } 
+      console.log("the stdOut " + JSON.stringify(sendToAngular))
+      res.send((sendToAngular))
+})  
 });
 
 module.exports = router;
