@@ -12,6 +12,7 @@ const mongoose = require("mongoose");
 
 const MCUsers = require("../McUsers");
 const MCClient = require("../McCloud");
+const DbClient = require('../DbCloud');
 
 // mongodb connection string
 const dbURI =
@@ -350,6 +351,125 @@ router.post('/Files', function(req, res) {
         console.log(file); 
       });
       res.status(201).json(files);
+    }
+  });
+});
+
+/* POST Dropbox client data to DbCloud */
+router.post('/MCDbClient', function(req, res) {
+  console.log("MCDbClient called " + req.body.dbemail);
+
+  DbClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      if (result) {
+        if (req.body.dbpassword) {
+          result.dbpassword = req.body.dbpassword
+        }
+        if (req.body.dbemail) {
+          result.dbemail = req.body.dbemail
+        }
+        const newResult = await result.save();
+        if (newResult === result) {
+          console.log(newResult);
+          res.status(200).json(newResult);
+        }
+        else {
+          console.log('DbClient save FAILED!');
+          res.status(404).json({ error: 'DbClient save FAILED!' });
+        }
+        
+      }
+      else {
+        let oneNewDbClient = new DbClient({
+          dbemail: req.body.dbemail,
+          dbpassword: req.body.dbpassword,
+          usermongoid: req.body.usermongoid
+        });
+      
+        await oneNewDbClient.save((err, result) => {
+          if (err) {
+            console.log(err);
+            res.status(500).send(err);
+          }
+          else {
+            console.log(result);
+            res.status(201).json(result);
+          }
+        });
+      }
+    }
+  });
+});
+
+/* GET all Dropbox service credentials for user */
+router.get('/DbClientData', function(req, res) {
+  console.log('DbClientData called');
+
+  DbClient.findOne({ usermongoid: req.body.usermongoid }, (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      console.log(result);
+      res.status(201).json(result);
+    }
+  });
+});
+
+/* DELETE *ALL* of user's Dropbox service credentials */
+router.delete('/DbClientDeleteData', function(req, res) {
+  console.log('DbClientDeleteData called ' + JSON.stringify(req.body));
+
+  DbClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      const newResult = await DbClient.deleteOne({ usermongoid: result.usermongoid, _id: result.id });
+      if (newResult.n == 1 && newResult.ok == 1 && newResult.deleteCount == 1) {
+        console.log(newResult);
+        console.log('DbClient successfully deleted ALL credentials');
+        res,status(200).json(newResult);
+      }
+      else {
+        console.log('DbClient delete FAILED!');
+        res.status(404).json({ error: 'Delete failed!'});
+      }
+    }
+  });
+});
+
+/* UPDATE user's Dropbox service credentials */
+router.patch('/DbClientUpdateData', function (req, res) {
+  console.log('DbClientUpdateData called ' + JSON.stringify(req.body));
+
+  DbClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      if (req.body.dbpassword) {
+        result.dbpassword = req.body.dbpassword
+      }
+      if (req.body.dbemail) {
+        result.dbemail = req.body.dbemail
+      }
+      const newResult = await result.save();
+      if (newResult === result) {
+        console.log(newResult);
+        res.status(200).json(newResult);
+      }
+      else {
+        console.log('DbClient update save FAILED!');
+        res.status(404).json({ error: 'DbClient update save FAILED!' });
+      }
     }
   });
 });
