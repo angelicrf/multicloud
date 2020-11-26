@@ -248,20 +248,47 @@ router.get('/LogOutMCUser', function (req, res) {
 router.post('/MCGdClient', function(req, res) {
   console.log("MCGdClient called " + req.body.gdname);
 
-  let oneNewMCClient = new MCClient({
-    gdname: req.body.gdname,
-    gdemail: req.body.gdemail,
-    usermongoid: req.body.usermongoid
-  });
-
-  oneNewMCClient.save((err, result) => {
+  MCClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
     if (err) {
       console.log(err);
       res.status(500).send(err);
     }
     else {
-      console.log(result);
-      res.status(201).json(result);
+      if (result) {
+        if (req.body.gdname) {
+          result.gdname = req.body.gdname
+        }
+        if (req.body.gdemail) {
+          result.gdemail = req.body.gdemail
+        }
+        const newResult = await result.save();
+        if (newResult === result) {
+          console.log(newResult);
+          res.status(200).json(newResult);
+        }
+        else {
+          console.log('MCClient save FAILED!');
+          res.status(404).json({ error: 'MCClient save FAILED!' });
+        }
+      }
+      else {
+        let oneNewMCClient = new MCClient({
+          gdname: req.body.gdname,
+          dbemail: req.body.dbemail,
+          usermongoid: req.body.usermongoid
+        });
+      
+        await oneNewMCClient.save((err, result) => {
+          if (err) {
+            console.log(err);
+            res.status(500).send(err);
+          }
+          else {
+            console.log(result);
+            res.status(201).json(result);
+          }
+        });
+      }
     }
   });
 });
