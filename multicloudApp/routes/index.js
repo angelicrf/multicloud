@@ -383,18 +383,19 @@ router.post('/Files', function(req, res) {
 });
 
 /* POST Dropbox client data to DbCloud */
-router.post('/MCDbClient', function(req, res) {
-  console.log("MCDbClient called " + req.body.dbemail);
-
-  DbClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
+router.post('/MCDbClient', (req, res) => {
+  console.log("MCDbClient calledOne ")
+  //console.log("MCDbClient called " + JSON.stringify(req.body));
+  
+   DbClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
     if (err) {
       console.log(err);
       res.status(500).send(err);
     }
     else {
       if (result) {
-        if (req.body.dbpassword) {
-          result.dbpassword = req.body.dbpassword
+        if (req.body.dbname) {
+          result.dbname = req.body.dbname
         }
         if (req.body.dbemail) {
           result.dbemail = req.body.dbemail
@@ -412,8 +413,8 @@ router.post('/MCDbClient', function(req, res) {
       }
       else {
         let oneNewDbClient = new DbClient({
+          dbname: req.body.dbname,
           dbemail: req.body.dbemail,
-          dbpassword: req.body.dbpassword,
           usermongoid: req.body.usermongoid
         });
       
@@ -427,7 +428,7 @@ router.post('/MCDbClient', function(req, res) {
             res.status(201).json(result);
           }
         });
-      }
+      } 
     }
   });
 });
@@ -482,8 +483,8 @@ router.patch('/DbClientUpdateData', function (req, res) {
       res.status(500).send(err);
     }
     else {
-      if (req.body.dbpassword) {
-        result.dbpassword = req.body.dbpassword
+      if (req.body.dbname) {
+        result.dbname = req.body.dbname
       }
       if (req.body.dbemail) {
         result.dbemail = req.body.dbemail

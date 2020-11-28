@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const DbCloudSvcsSchema = new Schema({
-    dbemail: {
+    dbname: {
         type: String,
         required: true
     },
-    dbpassword: {
+    dbemail: {
         type: String,
         required: true
     },
