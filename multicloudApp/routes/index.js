@@ -6,12 +6,13 @@ let LoggedInUserID = "";
 
 // fs for reading local files
 const fs = require('fs');
- 
+const child = require('child_process');
 // mongoose is a API wrapper overtop of mongodb
 const mongoose = require("mongoose");
 
 const MCUsers = require("../McUsers");
 const MCClient = require("../McCloud");
+const DbClient = require('../DbCloud');
 
 // mongodb connection string
 const dbURI =
@@ -287,20 +288,47 @@ router.get('/LogOutMCUser', function (req, res) {
 router.post('/MCGdClient', function(req, res) {
   console.log("MCGdClient called " + req.body.gdname);
 
-  let oneNewMCClient = new MCClient({
-    gdname: req.body.gdname,
-    gdemail: req.body.gdemail,
-    usermongoid: req.body.usermongoid
-  });
-
-  oneNewMCClient.save((err, result) => {
+  MCClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
     if (err) {
       console.log(err);
       res.status(500).send(err);
     }
     else {
-      console.log(result);
-      res.status(201).json(result);
+      if (result) {
+        if (req.body.gdname) {
+          result.gdname = req.body.gdname
+        }
+        if (req.body.gdemail) {
+          result.gdemail = req.body.gdemail
+        }
+        const newResult = await result.save();
+        if (newResult === result) {
+          console.log(newResult);
+          res.status(200).json(newResult);
+        }
+        else {
+          console.log('MCClient save FAILED!');
+          res.status(404).json({ error: 'MCClient save FAILED!' });
+        }
+      }
+      else {
+        let oneNewMCClient = new MCClient({
+          gdname: req.body.gdname,
+          dbemail: req.body.dbemail,
+          usermongoid: req.body.usermongoid
+        });
+      
+        await oneNewMCClient.save((err, result) => {
+          if (err) {
+            console.log(err);
+            res.status(500).send(err);
+          }
+          else {
+            console.log(result);
+            res.status(201).json(result);
+          }
+        });
+      }
     }
   });
 });
@@ -378,20 +406,211 @@ router.patch('/MCClientUpdateData', function (req, res) {
 router.post('/Files', function(req, res) {
   console.log('Files called');
 
-  fs.readdir(req.body.path, function (err, files) {
+  fs.readdir(req.body.path, 'buffer', function (err, files) {
     //handling error
     if (err) {
       res.status(500).send(err);
       console.log('Unable to scan directory: ' + err);
     } 
     else {
+      let names = [];
+      let fileData = [];
       //listing all files using forEach
       files.forEach(function (file) {
-        console.log(file); 
+        names.push(file.toString());
+        console.log(file.toString()); 
+        // fs.readFile(req.body.path + '/' + file, (err, data) => {
+        //   if (err) throw err;
+        //   fileData.push(data)
+        //   console.log(data);
+        // });
       });
-      res.status(201).json(files);
+      res.status(201).json({files, names: names});
     }
   });
+});
+
+/* POST add local files */
+router.post('/AddFiles', function(req, res) {
+  console.log('AddFiles called');
+  let path = req.body.filePath + '/' + req.body.fileName;
+  fs.open(path, 'w', function(err, fd) {
+    if (err) {
+        throw 'error opening file: ' + err;
+    }
+    buf = Buffer.from(req.body.fileData.data)
+    fs.write(fd, buf.toString(), null, function(err) {
+        if (err) throw 'error writing file: ' + err;
+        fs.close(fd, function() {
+            console.log(buf.toString())
+            console.log('file written');
+        })
+    });
+});
+  // try {
+  //   fs.writeFile(req.body.fileName, req.body.fileData, () => {
+  //     console.log(req.body.fileData);
+  //     console.log('The ' + req.body.fileName + ' file has been saved!');
+  //   });
+  // } catch (err) {
+  //   console.log(err);
+  //   res.status(500).send(err);
+  // }
+});
+
+/* POST delete local files */
+router.post('/DeleteFiles', function(req, res) {
+  console.log('DeleteFiles called');
+  try {
+    fs.unlinkSync(req.body.filePath + "/" + req.body.fileName);
+    console.log('successfully deleted ' + req.body.fileName);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+});
+
+/* POST Dropbox client data to DbCloud */
+router.post('/MCDbClient', (req, res) => {
+  console.log("MCDbClient calledOne ")
+  //console.log("MCDbClient called " + JSON.stringify(req.body));
+  
+   DbClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      if (result) {
+        if (req.body.dbname) {
+          result.dbname = req.body.dbname
+        }
+        if (req.body.dbemail) {
+          result.dbemail = req.body.dbemail
+        }
+        const newResult = await result.save();
+        if (newResult === result) {
+          console.log(newResult);
+          res.status(200).json(newResult);
+        }
+        else {
+          console.log('DbClient save FAILED!');
+          res.status(404).json({ error: 'DbClient save FAILED!' });
+        }
+        
+      }
+      else {
+        let oneNewDbClient = new DbClient({
+          dbname: req.body.dbname,
+          dbemail: req.body.dbemail,
+          usermongoid: req.body.usermongoid
+        });
+      
+        await oneNewDbClient.save((err, result) => {
+          if (err) {
+            console.log(err);
+            res.status(500).send(err);
+          }
+          else {
+            console.log(result);
+            res.status(201).json(result);
+          }
+        });
+      } 
+    }
+  });
+});
+
+/* GET all Dropbox service credentials for user */
+router.get('/DbClientData', function(req, res) {
+  console.log('DbClientData called');
+
+  DbClient.findOne({ usermongoid: req.body.usermongoid }, (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      console.log(result);
+      res.status(201).json(result);
+    }
+  });
+});
+
+/* DELETE *ALL* of user's Dropbox service credentials */
+router.delete('/DbClientDeleteData', function(req, res) {
+  console.log('DbClientDeleteData called ' + JSON.stringify(req.body));
+
+  DbClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      const newResult = await DbClient.deleteOne({ usermongoid: result.usermongoid, _id: result.id });
+      if (newResult.n == 1 && newResult.ok == 1 && newResult.deleteCount == 1) {
+        console.log(newResult);
+        console.log('DbClient successfully deleted ALL credentials');
+        res,status(200).json(newResult);
+      }
+      else {
+        console.log('DbClient delete FAILED!');
+        res.status(404).json({ error: 'Delete failed!'});
+      }
+    }
+  });
+});
+
+/* UPDATE user's Dropbox service credentials */
+router.patch('/DbClientUpdateData', function (req, res) {
+  console.log('DbClientUpdateData called ' + JSON.stringify(req.body));
+
+  DbClient.findOne({ usermongoid: req.body.usermongoid }, async (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+    else {
+      if (req.body.dbname) {
+        result.dbname = req.body.dbname
+      }
+      if (req.body.dbemail) {
+        result.dbemail = req.body.dbemail
+      }
+      const newResult = await result.save();
+      if (newResult === result) {
+        console.log(newResult);
+        res.status(200).json(newResult);
+      }
+      else {
+        console.log('DbClient update save FAILED!');
+        res.status(404).json({ error: 'DbClient update save FAILED!' });
+      }
+    }
+  });
+});
+/* Post URl code generated from DropBox to create access_token */
+router.post('/ShowData', function (req, res) {
+  res.header('Access-Control-Allow-Origin', '*');
+  console.log("req body from node " + JSON.stringify(req.body.saveCode))
+  let codeData = req.body.saveCode;
+  
+  child.exec(
+      `curl https://api.dropbox.com/oauth2/token \
+              -d code=${codeData} \
+              -d grant_type=authorization_code \
+              -d redirect_uri=http://localhost:4200/filetransfer \
+              -u 4kbv0so8hjs83lf:hzrap940rcg09t1`
+   ,(stdout, stderr) => {       
+      if(stderr.length > 0){
+          sendToAngular = stderr; 
+          //
+          sendToAngularAccessToken = stderr.toString()
+          console.log("the stdErr is " + stderr)               
+      } 
+      console.log("the stdOut " + JSON.stringify(sendToAngular))
+      res.send((sendToAngular))
+})  
 });
 
 module.exports = router;
