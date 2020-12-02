@@ -123,17 +123,10 @@ router.get('/MCUserByUsrNmPwd', function (req, res) {
     else {
       console.log(result);
       res.status(201).json(result);
-<<<<<<< HEAD
-      LoggedInUserID = result.id;     
-    }
-  });
-  return LoggedInUserID
-=======
       LoggedInUserID = result.id;
     }
   });
   return LoggedInUserID;
->>>>>>> sprint-6
 });
 
 /* post a new User and push to Mongo */
@@ -221,11 +214,7 @@ router.post('/MCGdClient', function(req, res) {
 });
 /* delete one User */
 router.delete('/DeleteMCUser', function (req, res) {
-<<<<<<< HEAD
-  if (LoggedInUserID !== '' || LoggedInUserID !== null ) {
-=======
   if (LoggedInUserID !== '' || LoggedInUserID !== null) {
->>>>>>> sprint-6
     console.log('DeleteMCUser called');
 
     MCUsers.findById({ _id: LoggedInUserID }, async (err, result) => {
@@ -254,7 +243,6 @@ router.delete('/DeleteMCUser', function (req, res) {
 
 /* log out the user */
 router.get('/LogOutMCUser', function (req, res) {
-<<<<<<< HEAD
   // checkout req.body
   console.log('LogOutMCUser called ' + JSON.stringify(req.body) +
    'LoggedInUserID ' + LoggedInUserID + 'HoldUserData ' +  HoldUserData);
@@ -265,17 +253,6 @@ router.get('/LogOutMCUser', function (req, res) {
     // send result to avoid having a pending promise
     res.status(200).send('user logged out successfully');
     console.log('HoldUserData ' + HoldUserData)
-=======
-  console.log('LogOutMCUser called ' + JSON.stringify(req.body) + 
-  ' LoggedInUserID ' + LoggedInUserID + ' HoldUserData ' + HoldUserData);
-
-  if (LoggedInUserID !== '' || LoggedInUserID !== null) {
-    LoggedInUserID = "";
-    HoldUserData.splice(0, HoldUserData.length);
-
-    console.log('HoldUserData ' + HoldUserData);
-    res.status(200).send('user logged out successfully');
->>>>>>> sprint-6
   }
   else {
     console.log('REQ.body.id does not match logged in user ID');
