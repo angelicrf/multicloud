@@ -1,9 +1,12 @@
 var express = require('express');
 var router = express.Router();
-
+var path = require('path');
+const {v4 : uuidv4} = require('uuid');
+const folder = './routes/AllFiles';
 let HoldUserData = [];
 let LoggedInUserID = "";
-
+let sendToAngularAccessToken = '';
+let saveGDAccessToken = '';
 // fs for reading local files
 const fs = require('fs');
 const child = require('child_process');
@@ -587,7 +590,98 @@ router.post('/ShowData', function (req, res) {
       } 
       console.log("the stdOut " + JSON.stringify(sendToAngular))
       res.send((sendToAngular))
-})  
+    })  
 });
+router.post('/GDAcessToken', function (req, res)
+{
+  console.log('google access token')
+  let svAccess = req.body.accessTokenDg;
+  saveGDAccessToken = svAccess;
+  res.send("GD accessToken received" + saveGDAccessToken);   
+  return saveGDAccessToken;
+})
+router.get('/UploadGd', function (req, res)
+{
+  let svAccess = saveGDAccessToken
+  console.log('google drive access token' + svAccess )
+  let sendToGd = ""
+  
+   fs.readdirSync( folder ).forEach( file => {
+    const extname = path.extname( file );
+    const filename = path.basename( file, extname );
+    const absolutePath = path.resolve( folder, file );
+    const storeFile = file.toString()
+    const concatFile = (filename + extname)
+    console.log("concatFile is " + concatFile)
+    return child.exec(
+      `curl --location --request POST 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id' \
+       --header 'Authorization: Bearer ${svAccess}' \
+       --header 'Content-Type: application/octet-stream' \
+       --data-binary @'./routes/AllFiles/${concatFile}'`
+     ,(stdout, stderr) => {    
+      if(stderr.length > 0){
+        sendToGd = stderr; 
+          console.log("the stdErr is " + stderr)            
+      }  
+      console.log("the stdOut is " + JSON.stringify(sendToGd)) 
+      //toDeleteAllFiles()
+      res.send("Response from Node: File downloaded from Google drive")
+       })         
+    })   
+ })
+ router.get('/DPUpload', function (req, res)
+{
+  let gth = (sendToAngularAccessToken)
+  let modifyGth = (gth.split(" "))
+  let saveAccess = (modifyGth[1])
+  let sendToGd = '';
+  let newId = uuidv4()
+  console.log("issued uuid " + newId )
+
+  if(saveAccess.charAt(0) == '"' || saveAccess.charAt(saveAccess.length - 1) == '"'){
+     fs.readdirSync( folder ).forEach( file => {
+      const extname = path.extname( file );
+      const filename = path.basename( file, extname );
+      const absolutePath = path.resolve( folder, file );
+      const concatFile = (filename + extname)
+      console.log("concatFile is " + concatFile)
+      child.exec(
+        `curl -X POST https://content.dropboxapi.com/2/files/upload \
+         -H 'Authorization: Bearer ${saveAccess.substr(1,saveAccess.length - 3)}' \
+         -H 'Content-Type: application/octet-stream' \
+         -H 'Dropbox-Api-Arg: {"path": "/yellowTeam${newId}"}' \
+         --data-binary @'./routes/AllFiles/${concatFile}'`
+        ,(stdout, stderr) => {    
+          if(stderr.length > 0){
+            sendToGd = stderr; 
+              console.log("the stdErr is " + stderr)            
+          } 
+          console.log("the stdOut is " + JSON.stringify(stdout)) 
+          //toDeleteAllFiles()
+          res.send("Response from Node: file uploaded to Dropbox")   
+        })    
+      })   
+  }
+})
+function tpMoveFilestoAllFiles(filename){
+  //console.log('the appDir is ' + appDir + 'filename is ' + fileName)
+  //find . -name '${filename}' -exec mv {} /AllFiles \;
+  return child.exec(`mv ${filename} ${appDir}/AllFiles`)   
+  , (err, stdout, stderr) => {
+    if (err) {
+      console.error(`exec error: ${err}`);
+    }
+    console.log(`Number of files ${stdout}`);
+  }
+}
+function toDeleteAllFiles(){
+  return child.exec(`cd ./routes/AllFiles && rm -f * && cd ..`)
+   , (err, stdout, stderr) => {
+    if (err) {
+      console.error(`exec error: ${err}`);
+    }
+    console.log(`Number of files `);
+   } 
+}
 
 module.exports = router;
