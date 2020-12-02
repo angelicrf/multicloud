@@ -366,20 +366,68 @@ router.patch('/MCClientUpdateData', function (req, res) {
 router.post('/Files', function(req, res) {
   console.log('Files called');
 
-  fs.readdir(req.body.path, function (err, files) {
+  fs.readdir(req.body.path, 'buffer', function (err, files) {
     //handling error
     if (err) {
       res.status(500).send(err);
       console.log('Unable to scan directory: ' + err);
     } 
     else {
+      let names = [];
+      let fileData = [];
       //listing all files using forEach
       files.forEach(function (file) {
-        console.log(file); 
+        names.push(file.toString());
+        console.log(file.toString()); 
+        // fs.readFile(req.body.path + '/' + file, (err, data) => {
+        //   if (err) throw err;
+        //   fileData.push(data)
+        //   console.log(data);
+        // });
       });
-      res.status(201).json(files);
+      res.status(201).json({files, names: names});
     }
   });
+});
+
+/* POST add local files */
+router.post('/AddFiles', function(req, res) {
+  console.log('AddFiles called');
+  let path = req.body.filePath + '/' + req.body.fileName;
+  fs.open(path, 'w', function(err, fd) {
+    if (err) {
+        throw 'error opening file: ' + err;
+    }
+    buf = Buffer.from(req.body.fileData.data)
+    fs.write(fd, buf.toString(), null, function(err) {
+        if (err) throw 'error writing file: ' + err;
+        fs.close(fd, function() {
+            console.log(buf.toString())
+            console.log('file written');
+        })
+    });
+});
+  // try {
+  //   fs.writeFile(req.body.fileName, req.body.fileData, () => {
+  //     console.log(req.body.fileData);
+  //     console.log('The ' + req.body.fileName + ' file has been saved!');
+  //   });
+  // } catch (err) {
+  //   console.log(err);
+  //   res.status(500).send(err);
+  // }
+});
+
+/* POST delete local files */
+router.post('/DeleteFiles', function(req, res) {
+  console.log('DeleteFiles called');
+  try {
+    fs.unlinkSync(req.body.filePath + "/" + req.body.fileName);
+    console.log('successfully deleted ' + req.body.fileName);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
 });
 
 /* POST Dropbox client data to DbCloud */
