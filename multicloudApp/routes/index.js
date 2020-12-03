@@ -7,6 +7,7 @@ let HoldUserData = [];
 let LoggedInUserID = "";
 let sendToAngularAccessToken = '';
 let saveGDAccessToken = '';
+let sendToGd = "";
 // fs for reading local files
 const fs = require('fs');
 const child = require('child_process');
@@ -603,9 +604,9 @@ router.post('/GDAcessToken', function (req, res)
 router.get('/UploadGd', function (req, res)
 {
   let svAccess = saveGDAccessToken
+  let savefileId = ''
   console.log('google drive access token' + svAccess )
-  let sendToGd = ""
-  
+
    fs.readdirSync( folder ).forEach( file => {
     const extname = path.extname( file );
     const filename = path.basename( file, extname );
@@ -620,15 +621,38 @@ router.get('/UploadGd', function (req, res)
        --data-binary @'./routes/AllFiles/${concatFile}'`
      ,(stdout, stderr) => {    
       if(stderr.length > 0){
-        sendToGd = stderr; 
-          console.log("the stdErr is " + stderr)            
+        console.log(JSON.stringify(stderr))
+        savefileId = (JSON.stringify(stderr)).toString();
+        sendToGd = savefileId.slice(15,savefileId.length - 8) 
+          console.log("the stdErr is " + sendToGd)            
       }  
-      console.log("the stdOut is " + JSON.stringify(sendToGd)) 
+      console.log("the stdOut is " + sendToGd) 
       //toDeleteAllFiles()
-      res.send("Response from Node: File downloaded from Google drive")
+      res.send("Response from Node: File uploaded to Google drive")
        })         
     })   
  })
+ router.get('/GDUpdateFile' , (req, res) => {
+   console.log("GDUpdateFile called " + sendToGd )
+   console.log("saveGDAccessToken from GDUpdateFile " + saveGDAccessToken)
+  let svAccess = saveGDAccessToken
+
+  let updatedMs = ''
+  return child.exec(
+    `curl --location --request PATCH 'https://www.googleapis.com/drive/v2/files/${sendToGd}' \
+    --header 'Authorization: Bearer ${svAccess}' \
+    --header "Content-Type: application/json" \
+    --header 'Accept: */*' \
+    --data '{"title":"changedName.png"}'`
+    ,(stdout, stderr) => {    
+      if(stderr.length > 0){
+        updatedMs = stderr; 
+          console.log("the stdErr is " + updatedMs)            
+      }  
+      console.log("the stdOut is " + updatedMs) 
+      res.send("Response from Node: File Updated in Google drive")
+       })  
+  })
  router.get('/DPUpload', function (req, res)
 {
   let gth = (sendToAngularAccessToken)
