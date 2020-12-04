@@ -199,7 +199,8 @@ router.patch('/UpdateMCUser', function (req, res) {
     res.status(500).send('REQ.body.id does not match logged in user ID');
   }
 });
-//post Google drive client data to McCloud
+
+/* post Google drive client data to McCloud */
 router.post('/MCGdClient', function(req, res) {
   console.log("MCGdClient called " + req.body.gdname);
 
@@ -219,6 +220,7 @@ router.post('/MCGdClient', function(req, res) {
     }
   });
 });
+
 /* delete one User */
 router.delete('/DeleteMCUser', function (req, res) {
   if (LoggedInUserID !== '' || LoggedInUserID !== null) {
@@ -573,6 +575,7 @@ router.patch('/DbClientUpdateData', function (req, res) {
     }
   });
 });
+
 /* Post URl code generated from DropBox to create access_token */
 router.post('/ShowData', function (req, res) {
   res.header('Access-Control-Allow-Origin', '*');
@@ -596,6 +599,7 @@ router.post('/ShowData', function (req, res) {
       res.send((sendToAngular))
     })  
 });
+
 router.post('/GDAcessToken', function (req, res)
 {
   console.log('google access token')
@@ -604,13 +608,14 @@ router.post('/GDAcessToken', function (req, res)
   res.send("GD accessToken received" + saveGDAccessToken);   
   return saveGDAccessToken;
 })
+
 router.get('/UploadGd', function (req, res)
 {
   let svAccess = saveGDAccessToken
   let savefileId = ''
   console.log('google drive access token' + svAccess )
 
-   fs.readdirSync( folder ).forEach( file => {
+  fs.readdirSync( folder ).forEach( file => {
     const extname = path.extname( file );
     const filename = path.basename( file, extname );
     const absolutePath = path.resolve( folder, file );
@@ -632,13 +637,14 @@ router.get('/UploadGd', function (req, res)
       console.log("the stdOut is " + sendToGd) 
       //toDeleteAllFiles()
       res.send("Response from Node: File uploaded to Google drive")
-       })         
-    })   
- })
- router.get('/GDUpdateFile' , (req, res) => {
+    })         
+  })   
+})
+
+router.get('/GDUpdateFile' , (req, res) => {
    console.log("GDUpdateFile called " + sendToGd )
    console.log("saveGDAccessToken from GDUpdateFile " + saveGDAccessToken)
-  let svAccess = saveGDAccessToken
+   let svAccess = saveGDAccessToken
 
   let updatedMs = ''
   return child.exec(
@@ -654,9 +660,10 @@ router.get('/UploadGd', function (req, res)
       }  
       console.log("the stdOut is " + updatedMs) 
       res.send("Response from Node: File Updated in Google drive")
-       })  
-  })
- router.get('/DPUpload', function (req, res)
+  })  
+})
+
+router.get('/DPUpload', function (req, res)
 {
   let gth = (sendToAngularAccessToken)
   let modifyGth = (gth.split(" "))
@@ -666,7 +673,7 @@ router.get('/UploadGd', function (req, res)
   console.log("issued uuid " + newId )
 
   if(saveAccess.charAt(0) == '"' || saveAccess.charAt(saveAccess.length - 1) == '"'){
-     fs.readdirSync( folder ).forEach( file => {
+    fs.readdirSync( folder ).forEach( file => {
       const extname = path.extname( file );
       const filename = path.basename( file, extname );
       const absolutePath = path.resolve( folder, file );
@@ -686,10 +693,11 @@ router.get('/UploadGd', function (req, res)
           console.log("the stdOut is " + JSON.stringify(stdout)) 
           //toDeleteAllFiles()
           res.send("Response from Node: file uploaded to Dropbox")   
-        })    
-      })   
+      })    
+    })   
   }
 })
+
 router.post('/DpPath', function (req, res)
 {
   console.log("DpPath called")
@@ -698,6 +706,7 @@ router.post('/DpPath', function (req, res)
   console.log("dpPath from index is " + getDpFilePath)
   res.send("Gd file path received " + getDpFilePath)
 })
+
 router.get('/DPDownload', function (req, res)
 {
   console.log("DPDownload called")
@@ -732,12 +741,14 @@ router.get('/DPDownload', function (req, res)
   }  
   //tpMoveFilestoAllFiles(storeLastPart) 
 })
+
 router.post('/GdId', function (req, res) {
   console.log("GdId called ")
   Gdrecivedid = req.body.gdSaveId
   console.log("Gdrecivedid from /GdId " + Gdrecivedid)
   res.send("GdId received " + Gdrecivedid)
 })
+
 router.get('/DownloadGd', function (req, res)
 {
   console.log("DownloadGd called ")
@@ -760,6 +771,7 @@ router.get('/DownloadGd', function (req, res)
      res.send("Response from Node: File downloaded from Google drive")   
    }) 
 })
+
 function tpMoveFilestoAllFiles(filename){
   console.log("tpMoveFilestoAllFiles called")
   
@@ -775,6 +787,7 @@ function tpMoveFilestoAllFiles(filename){
     console.log(`Number of files ${stdout}`);
   }
 }
+
 function toDeleteAllFiles(){
   return child.exec(`cd ./routes/AllFiles && rm -f * && cd ..`)
    , (err, stdout, stderr) => {
