@@ -629,7 +629,7 @@ router.get('/UploadGd', function (req, res)
       `curl --location --request POST 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id' \
        --header 'Authorization: Bearer ${svAccess}' \
        --header 'Content-Type: application/octet-stream' \
-       --data-binary @./routes/AllFiles/${concatFile2}`
+       --data-binary @./routes/AllFiles/${concatFile}`
      ,(stdout, stderr) => {    
       if(stderr.length > 0){
         console.log(JSON.stringify(stderr))
@@ -645,15 +645,15 @@ router.get('/UploadGd', function (req, res)
  router.get('/GDUpdateFile' , (req, res) => {
    console.log("GDUpdateFile called " + sendToGd )
    console.log("saveGDAccessToken from GDUpdateFile " + saveGDAccessToken)
-  let svAccess = saveGDAccessToken
-
-  let updatedMs = ''
+   console.log("storeLastPart is " + storeLastPart);
+   let svAccess = saveGDAccessToken;
+   let updatedMs = '';
   return child.exec(
     `curl --location --request PATCH 'https://www.googleapis.com/drive/v2/files/${sendToGd}' \
     --header 'Authorization: Bearer ${svAccess}' \
     --header "Content-Type: application/json" \
     --header 'Accept: */*' \
-    --data '{"title":${storeLastPart}}'`
+    --data '{"title":"${storeLastPart.toString()}"}'`
     ,(stdout, stderr) => {    
       if(stderr.length > 0){
         updatedMs = stderr; 
@@ -734,14 +734,13 @@ router.get('/DPDownload', function (req, res)
       ,(stdout, stderr) => {    
         if(stderr.length > 0){
           sendToGd = stderr;
-         // tpMoveFilestoAllFiles(storeLastPart) 
-            console.log("the stdErr is " + stderr)            
+         // tpMoveFilestoAllFiles(storeLastPart)
+            console.log("the stdErr is " + stderr);           
         } 
-        console.log("the stdOut is " + JSON.stringify(stdout))
-      })  
-        tpMoveFilestoAllFiles(storeLastPart)  
+        console.log("the stdOut is " + JSON.stringify(stdout));
+      })
         console.log("file transfered")
-        
+        tpMoveFilestoAllFiles(storeLastPart.toString());
         res.send("Response from Node: file downloaded")             
   }  
    
