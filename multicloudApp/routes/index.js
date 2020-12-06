@@ -4,11 +4,12 @@ var path = require('path');
 const {v4 : uuidv4} = require('uuid');
 const folder = './routes/AllFiles';
 let HoldUserData = [];
-let LoggedInUserID = "";
+let LoggedInUserID = '';
 let sendToAngularAccessToken = '';
 let saveGDAccessToken = '';
-let sendToGd = "";
+let sendToGd = '';
 let Gdrecivedid = '';
+let GdrecivedName = '';
 let getDpFilePath = '';
 let storeLastPart = '';
 let appDir = path.dirname(require.main.filename);
@@ -611,6 +612,8 @@ router.post('/GDAcessToken', function (req, res)
 })
 router.get('/UploadGd', function (req, res)
 {
+  console.log("storeLastPart is " + storeLastPart);
+  tpMoveFilestoAllFiles(storeLastPart.toString());
   let svAccess = saveGDAccessToken
   let savefileId = '';
   let concatFile = '';
@@ -639,6 +642,7 @@ router.get('/UploadGd', function (req, res)
       }  
       console.log("the stdOut is " + sendToGd) 
       //toDeleteAllFiles()
+      
       res.send("Response from Node: File uploaded to Google drive")
        })   
 })
@@ -666,6 +670,7 @@ router.get('/UploadGd', function (req, res)
  router.get('/DPUpload', function (req, res)
 {
   console.log("DpUpload called ")
+  tpMoveFilestoAllFiles(GdrecivedName);
   let gth = (sendToAngularAccessToken)
   console.log("gth is " + gth)
   let modifyGth = (gth.split(" "))
@@ -696,7 +701,7 @@ router.get('/UploadGd', function (req, res)
               console.log("the stdErr is " + stderr)            
           } 
           console.log("the stdOut is " + JSON.stringify(stdout)) 
-          toDeleteAllFiles()
+          //toDeleteAllFiles()
           res.send("Response from Node: file uploaded to Dropbox")   
         })   
   }
@@ -730,17 +735,15 @@ router.get('/DPDownload', function (req, res)
       `curl -X POST https://content.dropboxapi.com/2/files/download \
        -H 'Authorization: Bearer ${saveAccess.substr(1,saveAccess.length - 3)}' \
        -H 'Dropbox-Api-Arg: {"path": "${getDpFilePath}"}' \
-       -o ${storeLastPart}`
+       -o "${storeLastPart}"`
       ,(stdout, stderr) => {    
         if(stderr.length > 0){
           sendToGd = stderr;
-         // tpMoveFilestoAllFiles(storeLastPart)
             console.log("the stdErr is " + stderr);           
         } 
         console.log("the stdOut is " + JSON.stringify(stdout));
       })
         console.log("file transfered")
-        tpMoveFilestoAllFiles(storeLastPart.toString());
         res.send("Response from Node: file downloaded")             
   }  
    
@@ -764,7 +767,7 @@ router.get('/DownloadGd', function (req, res)
   return child.exec(
      `curl --location --request GET 'https://www.googleapis.com/drive/v2/files/${Gdrecivedid}?alt=media&source=downloadUrl' \
       --header 'Authorization: Bearer ${saveGDAccessToken}' \
-      -o ${fileNameCreate}`
+      -o "${fileNameCreate}"`
     ,(stdout, stderr) => {    
      if(stderr.length > 0){
        sendToGd = stderr; 
@@ -772,7 +775,7 @@ router.get('/DownloadGd', function (req, res)
      } 
      console.log("the stdOut is " + JSON.stringify(sendToGd)) 
       // move file to AllFiles
-     tpMoveFilestoAllFiles(GdrecivedName)
+     //tpMoveFilestoAllFiles(GdrecivedName)
      res.send("Response from Node: File downloaded from Google drive")   
    }) 
 })
@@ -781,24 +784,29 @@ function tpMoveFilestoAllFiles(filename){
   
   console.log('the filename is ' + filename )
   let newAppDir = appDir.toString().substring(0, appDir.toString().lastIndexOf("/") + 1);
-  console.log('the newAppDir is ' + newAppDir )
+  console.log('the newAppDir is ' + newAppDir );
+  let singlepathAp = `${newAppDir}routes/AllFiles`
+  console.log('the singlepathAp is ' + singlepathAp );
   //find . -name '${filename}' -exec mv {} /AllFiles \;
-  return child.exec(`mv ${filename} ${newAppDir}/routes/AllFiles`)   
-  , (err, stdout, stderr) => {
+  return child.exec(`mv "${filename}" ${singlepathAp}`,   
+  (err, stdout, stderr) => {
     if (err) {
       console.error(`exec error: ${err}`);
+      throw err;
     }
-    console.log(`Number of files ${stdout}`);
-  }
+    console.log("stdout of files" +  stdout)
+    console.log("stderr of files" +  stderr)
+  });
 }
 function toDeleteAllFiles(){
-  return child.exec(`cd ./routes/AllFiles && rm -f * && cd ..`)
+  return child.exec(`cd ./routes/AllFiles && rm -f * && cd .. && pwd`
    , (err, stdout, stderr) => {
     if (err) {
       console.error(`exec error: ${err}`);
     }
-    console.log(`Number of files `);
-   } 
+    console.log(`stdout of files ${stdout}`);
+   });
 }
-
+//tpMoveFilestoAllFiles('pdfFile.pdf');
+//toDeleteAllFiles();
 module.exports = router;
