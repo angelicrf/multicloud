@@ -610,15 +610,15 @@ router.post('/GDAcessToken', function (req, res)
   res.send("GD accessToken received" + saveGDAccessToken);   
   return saveGDAccessToken;
 })
-router.get('/UploadGd', function (req, res)
+router.get('/UploadGd', async function (req, res)
 {
   console.log("storeLastPart is " + storeLastPart);
-  tpMoveFilestoAllFiles(storeLastPart.toString());
+  let moveFileResule = await tpMoveFilestoAllFiles(storeLastPart.toString());
+  console.log("moveFileResule " + moveFileResule);
   let svAccess = saveGDAccessToken
   let savefileId = '';
   let concatFile = '';
   console.log('google drive access token' + svAccess )
-
     fs.readdirSync( folder ).forEach( file => {
     console.log("inside the folderOne ")
     const extname = path.extname( file );
@@ -667,10 +667,11 @@ router.get('/UploadGd', function (req, res)
       res.send("Response from Node: File Updated in Google drive")
        })  
   })
- router.get('/DPUpload', function (req, res)
+ router.get('/DPUpload', async function (req, res)
 {
   console.log("DpUpload called ")
-  tpMoveFilestoAllFiles(GdrecivedName);
+  let moveFileResule = await tpMoveFilestoAllFiles(GdrecivedName);
+  console.log("moveFileResule " + moveFileResule);
   let gth = (sendToAngularAccessToken)
   console.log("gth is " + gth)
   let modifyGth = (gth.split(" "))
@@ -779,8 +780,9 @@ router.get('/DownloadGd', function (req, res)
      res.send("Response from Node: File downloaded from Google drive")   
    }) 
 })
-function tpMoveFilestoAllFiles(filename){
-  console.log("tpMoveFilestoAllFiles called")
+async function tpMoveFilestoAllFiles(filename){
+  return await new Promise((resolve,reject) => {
+    console.log("tpMoveFilestoAllFiles called")
   
   console.log('the filename is ' + filename )
   let newAppDir = appDir.toString().substring(0, appDir.toString().lastIndexOf("/") + 1);
@@ -792,11 +794,15 @@ function tpMoveFilestoAllFiles(filename){
   (err, stdout, stderr) => {
     if (err) {
       console.error(`exec error: ${err}`);
+      reject(err);
       throw err;
     }
     console.log("stdout of files" +  stdout)
     console.log("stderr of files" +  stderr)
+    return resolve(stdout);
+    });
   });
+  
 }
 function toDeleteAllFiles(){
   return child.exec(`cd ./routes/AllFiles && rm -f * && cd .. && pwd`
