@@ -610,41 +610,47 @@ router.post('/GDAcessToken', function (req, res)
   res.send("GD accessToken received" + saveGDAccessToken);   
   return saveGDAccessToken;
 })
-router.get('/UploadGd', async function (req, res)
+router.get('/UploadGd', function (req, res)
 {
   console.log("storeLastPart is " + storeLastPart);
-  let moveFileResule = await tpMoveFilestoAllFiles(storeLastPart.toString());
-  console.log("moveFileResule " + moveFileResule);
+  setTimeout(async () => {
+    let moveFileResule = await tpMoveFilestoAllFiles(storeLastPart);
+    console.log("moveFileResule after send " + moveFileResule);
+  },10000 );  
   let svAccess = saveGDAccessToken
   let savefileId = '';
   let concatFile = '';
-  console.log('google drive access token' + svAccess )
+  setTimeout(() => {
+    console.log('google drive access token' + svAccess )
     fs.readdirSync( folder ).forEach( file => {
-    console.log("inside the folderOne ")
-    const extname = path.extname( file );
-    const filename = path.basename( file, extname );
-    const absolutePath = path.resolve( folder, file );
-    const storeFile = file.toString()
-    concatFile = (filename + extname)       
-    }) 
-    console.log("concatFile is " + concatFile)
-    return child.exec(
-      `curl --location --request POST 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id' \
-       --header 'Authorization: Bearer ${svAccess}' \
-       --header 'Content-Type: application/octet-stream' \
-       --data-binary @./routes/AllFiles/${concatFile}`
-     ,(stdout, stderr) => {    
-      if(stderr.length > 0){
-        console.log(JSON.stringify(stderr))
-        savefileId = (JSON.stringify(stderr)).toString();
-        sendToGd = savefileId.slice(15,savefileId.length - 8) 
-          console.log("the stdErr is " + sendToGd)            
-      }  
-      console.log("the stdOut is " + sendToGd) 
-      //toDeleteAllFiles()
-      
-      res.send("Response from Node: File uploaded to Google drive")
-       })   
+   console.log("inside the folderOne ")
+   const extname = path.extname( file );
+   const filename = path.basename( file, extname );
+   const absolutePath = path.resolve( folder, file );
+   const storeFile = file.toString()
+   concatFile = (filename + extname)       
+   })  
+   //console.log("concatFile is " + concatFile)
+   //concatFile = 'dog_3.png';
+   return child.exec(
+     `curl --location --request POST 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id' \
+      --header 'Authorization: Bearer ${svAccess}' \
+      --header 'Content-Type: application/octet-stream' \
+      --data-binary @./routes/AllFiles/${concatFile}`
+    ,(stdout, stderr) => {    
+     if(stderr.length > 0){
+       console.log(JSON.stringify(stderr))
+       savefileId = (JSON.stringify(stderr)).toString();
+       sendToGd = savefileId.slice(15,savefileId.length - 8) 
+         console.log("the stdErr is " + sendToGd)            
+     }  
+     console.log("the stdOut is " + sendToGd) 
+     //toDeleteAllFiles()
+     
+     res.send("Response from Node: File uploaded to Google drive")
+      });
+  },14000);
+   
 })
  router.get('/GDUpdateFile' , (req, res) => {
    console.log("GDUpdateFile called " + sendToGd )
@@ -667,11 +673,14 @@ router.get('/UploadGd', async function (req, res)
       res.send("Response from Node: File Updated in Google drive")
        })  
   })
- router.get('/DPUpload', async function (req, res)
+ router.get('/DPUpload', function (req, res)
 {
   console.log("DpUpload called ")
-  let moveFileResule = await tpMoveFilestoAllFiles(GdrecivedName);
-  console.log("moveFileResule " + moveFileResule);
+  setTimeout(async () => {
+    let moveFileResule = await tpMoveFilestoAllFiles(GdrecivedName);
+    console.log("moveFileResule " + moveFileResule);
+  },10000);
+  
   let gth = (sendToAngularAccessToken)
   console.log("gth is " + gth)
   let modifyGth = (gth.split(" "))
@@ -679,32 +688,33 @@ router.get('/UploadGd', async function (req, res)
   let sendToGd = '';
   let newId = uuidv4()
   let concatFile = '';
+
   if(saveAccess.charAt(0) == '"' || saveAccess.charAt(saveAccess.length - 1) == '"'){
-    fs.readdirSync( folder ).forEach( file => {
-      console.log("inside the folderOne ")
-      const extname = path.extname( file );
-      const filename = path.basename( file, extname );
-      const absolutePath = path.resolve( folder, file );
-      concatFile = (filename + extname);
-      console.log("concatFile is " + concatFile)   
-     // const concatFile = "pdffile.pdf";
-      }); 
-      console.log("concatFile outside " + concatFile) 
-      child.exec(
-        `curl -X POST https://content.dropboxapi.com/2/files/upload \
-         -H 'Authorization: Bearer ${saveAccess.substr(1,saveAccess.length - 3)}' \
-         -H 'Content-Type: application/octet-stream' \
-         -H 'Dropbox-Api-Arg: {"path": "/tMultiCloud${newId}"}' \
-         --data-binary @./routes/AllFiles/${concatFile}`
-        ,(stdout, stderr) => {    
-          if(stderr.length > 0){
-            sendToGd = stderr; 
-              console.log("the stdErr is " + stderr)            
-          } 
-          console.log("the stdOut is " + JSON.stringify(stdout)) 
-          //toDeleteAllFiles()
-          res.send("Response from Node: file uploaded to Dropbox")   
-        })   
+    setTimeout(( ) => {
+      fs.readdirSync( folder ).forEach( file => {
+        console.log("inside the folderOne ")
+        const extname = path.extname( file );
+        const filename = path.basename( file, extname );
+        const absolutePath = path.resolve( folder, file );
+        concatFile = (filename + extname);   
+        }); 
+        console.log("concatFile outside " + concatFile) 
+        child.exec(
+          `curl -X POST https://content.dropboxapi.com/2/files/upload \
+           -H 'Authorization: Bearer ${saveAccess.substr(1,saveAccess.length - 3)}' \
+           -H 'Content-Type: application/octet-stream' \
+           -H 'Dropbox-Api-Arg: {"path": "/tMultiCloud${newId}"}' \
+           --data-binary @./routes/AllFiles/${concatFile}`
+          ,(stdout, stderr) => {    
+            if(stderr.length > 0){
+              sendToGd = stderr; 
+                console.log("the stdErr is " + stderr)            
+            } 
+            console.log("the stdOut is " + JSON.stringify(stdout)) 
+            toDeleteAllFiles()
+            res.send("Response from Node: file uploaded to Dropbox")   
+          })
+    },14000);  
   }
 })
 router.post('/DpPath', function (req, res)
@@ -715,7 +725,7 @@ router.post('/DpPath', function (req, res)
   console.log("dpPath from index is " + getDpFilePath)
   res.send("Dp file path received " + getDpFilePath)
 })
-router.get('/DPDownload', function (req, res)
+router.get('/DPDownload', async function (req, res)
 {
   console.log("DPDownload called")
   console.log("getDPPath from DPDownload is " + getDpFilePath )
@@ -744,10 +754,17 @@ router.get('/DPDownload', function (req, res)
         } 
         console.log("the stdOut is " + JSON.stringify(stdout));
       })
-        console.log("file transfered")
-        res.send("Response from Node: file downloaded")             
+        console.log("file transfered");
+        res.send("Response from Node: file downloaded");
+        /* setTimeout(async() => {
+          let moveFileResule = await tpMoveFilestoAllFiles(storeLastPart);
+          console.log("moveFileResule after send " + moveFileResule);
+        },10000 );    */           
   }  
-   
+/*   setTimeout(async() => {
+    let moveFileResule2 = await tpMoveFilestoAllFiles(storeLastPart);
+    console.log("moveFileResule after send " + moveFileResule2);
+  },10000 ); */  
 })
 router.post('/GdId', function (req, res) {
   console.log("GdId called ")
@@ -790,6 +807,7 @@ async function tpMoveFilestoAllFiles(filename){
   let singlepathAp = `${newAppDir}routes/AllFiles`
   console.log('the singlepathAp is ' + singlepathAp );
   //find . -name '${filename}' -exec mv {} /AllFiles \;
+  //mv "${filename}" ${singlepathAp}
   return child.exec(`mv "${filename}" ${singlepathAp}`,   
   (err, stdout, stderr) => {
     if (err) {
@@ -813,6 +831,7 @@ function toDeleteAllFiles(){
     console.log(`stdout of files ${stdout}`);
    });
 }
-//tpMoveFilestoAllFiles('pdfFile.pdf');
+
+//tpMoveFilestoAllFiles('jpegfile.jpeg');
 //toDeleteAllFiles();
 module.exports = router;
