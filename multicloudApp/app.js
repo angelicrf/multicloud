@@ -9,10 +9,10 @@ var indexRouter = require('./routes/index');
 // var usersRouter = require('./routes/users');
 
 // Commented out for Azure deployment
- var corsOptions = {
-  origin: 'http://localhost:4200',
-  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204 
-} 
+//  var corsOptions = {
+//   origin: 'http://localhost:4200',
+//   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204 
+// } 
 
 var app = express();
 
@@ -23,7 +23,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Commented out for Azure deployment
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
 
 app.use('/', indexRouter);
 // app.use('/users', usersRouter);
