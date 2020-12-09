@@ -435,15 +435,6 @@ router.post('/AddFiles', function(req, res) {
         })
     });
 });
-  // try {
-  //   fs.writeFile(req.body.fileName, req.body.fileData, () => {
-  //     console.log(req.body.fileData);
-  //     console.log('The ' + req.body.fileName + ' file has been saved!');
-  //   });
-  // } catch (err) {
-  //   console.log(err);
-  //   res.status(500).send(err);
-  // }
 });
 
 /* POST delete local files */
@@ -452,6 +443,20 @@ router.post('/DeleteFiles', function(req, res) {
   try {
     fs.unlinkSync(req.body.filePath + "/" + req.body.fileName);
     console.log('successfully deleted ' + req.body.fileName);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+});
+
+/* POST move local file to AllFiles */
+router.post('/MoveFile', function(req, res) {
+  console.log('MoveFile called');
+  try {
+    setTimeout(async () => {
+      let moveFileResule = await tpMoveFilestoAllFiles(req.body.fileName);
+      console.log('successfully moved ' + req.body.fileName);
+    },10000);
   } catch (err) {
     console.log(err);
     res.status(500).send(err);
@@ -645,13 +650,73 @@ router.get('/UploadGd', function (req, res)
          console.log("the stdErr is " + sendToGd)            
      }  
      console.log("the stdOut is " + sendToGd) 
-     //toDeleteAllFiles()
+     toDeleteAllFiles()
      
      res.send("Response from Node: File uploaded to Google drive")
       });
   },14000);
    
 })
+let localFile;
+router.post('/UploadGdLocal', function (req, res)
+{
+  let svAccess = saveGDAccessToken
+  let savefileId = '';
+  let concatFile = '';
+  setTimeout(() => {
+    console.log('google drive access token' + svAccess )
+    fs.readdirSync( folder ).forEach( file => {
+      if(file === req.body.fileName) {
+        console.log("inside the folderOne ")
+        const extname = path.extname( file );
+        const filename = path.basename( file, extname );
+        const absolutePath = path.resolve( folder, file );
+        const storeFile = file.toString()
+        concatFile = (filename + extname)
+        localFile = concatFile
+      }   
+   })  
+   console.log("concatFile is " + concatFile)
+   return child.exec(
+     `curl --location --request POST 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id' \
+      --header 'Authorization: Bearer ${svAccess}' \
+      --header 'Content-Type: application/octet-stream' \
+      --data-binary @./routes/AllFiles/${concatFile}`
+    ,(stdout, stderr) => {    
+     if(stderr.length > 0){
+       console.log(JSON.stringify(stderr))
+       savefileId = (JSON.stringify(stderr)).toString();
+       sendToGd = savefileId.slice(15,savefileId.length - 8) 
+         console.log("the stdErr is " + sendToGd)            
+     }  
+     console.log("the stdOut is " + sendToGd) 
+     toDeleteAllFiles()
+     
+     res.send("Response from Node: File uploaded to Google drive")
+      });
+  },14000);
+   
+})
+router.get('/GDUpdateLocalFile' , (req, res) => {
+  console.log("GDUpdateLocalFile called " + sendToGd )
+  console.log("saveGDAccessToken from GDUpdateFile " + saveGDAccessToken)
+  let svAccess = saveGDAccessToken;
+  let updatedMs = '';
+ return child.exec(
+   `curl --location --request PATCH 'https://www.googleapis.com/drive/v2/files/${sendToGd}' \
+   --header 'Authorization: Bearer ${svAccess}' \
+   --header "Content-Type: application/json" \
+   --header 'Accept: */*' \
+   --data '{"title":"${localFile.toString()}"}'`
+   ,(stdout, stderr) => {    
+     if(stderr.length > 0){
+       updatedMs = stderr; 
+         console.log("the stdErr is " + updatedMs)            
+     }  
+     console.log("the stdOut is " + updatedMs) 
+     res.send("Response from Node: File Updated in Google drive")
+      })  
+ })
  router.get('/GDUpdateFile' , (req, res) => {
    console.log("GDUpdateFile called " + sendToGd )
    console.log("saveGDAccessToken from GDUpdateFile " + saveGDAccessToken)
@@ -703,7 +768,48 @@ router.get('/UploadGd', function (req, res)
           `curl -X POST https://content.dropboxapi.com/2/files/upload \
            -H 'Authorization: Bearer ${saveAccess.substr(1,saveAccess.length - 3)}' \
            -H 'Content-Type: application/octet-stream' \
-           -H 'Dropbox-Api-Arg: {"path": "/tMultiCloud${newId}"}' \
+           -H 'Dropbox-Api-Arg: {"path": "/${concatFile}"}' \
+           --data-binary @./routes/AllFiles/${concatFile}`
+          ,(stdout, stderr) => {    
+            if(stderr.length > 0){
+              sendToGd = stderr; 
+                console.log("the stdErr is " + stderr)            
+            } 
+            console.log("the stdOut is " + JSON.stringify(stdout)) 
+            toDeleteAllFiles()
+            res.send("Response from Node: file uploaded to Dropbox")   
+          })
+    },14000);  
+  }
+})
+router.post('/DPUploadLocal', function (req, res)
+{
+  console.log("DpUploadLocal called ")
+  let gth = (sendToAngularAccessToken)
+  console.log("gth is " + gth)
+  let modifyGth = (gth.split(" "))
+  let saveAccess = (modifyGth[1])
+  let sendToGd = '';
+  let newId = uuidv4()
+  let concatFile = '';
+
+  if(saveAccess.charAt(0) == '"' || saveAccess.charAt(saveAccess.length - 1) == '"'){
+    setTimeout(( ) => {
+      fs.readdirSync( folder ).forEach( file => {
+        if(file === req.body.fileName) {
+          console.log("inside the folderOne ")
+          const extname = path.extname( file );
+          const filename = path.basename( file, extname );
+          const absolutePath = path.resolve( folder, file );
+          concatFile = (filename + extname);
+        }
+        }); 
+        console.log("concatFile outside " + concatFile) 
+        child.exec(
+          `curl -X POST https://content.dropboxapi.com/2/files/upload \
+           -H 'Authorization: Bearer ${saveAccess.substr(1,saveAccess.length - 3)}' \
+           -H 'Content-Type: application/octet-stream' \
+           -H 'Dropbox-Api-Arg: {"path": "/${concatFile}"}' \
            --data-binary @./routes/AllFiles/${concatFile}`
           ,(stdout, stderr) => {    
             if(stderr.length > 0){
@@ -766,6 +872,50 @@ router.get('/DPDownload', async function (req, res)
     console.log("moveFileResule after send " + moveFileResule2);
   },10000 ); */  
 })
+router.get('/DPDownloadLocal', async function (req, res)
+{
+  console.log("DPDownloadLocal called")
+  console.log("getDPPath from DPDownload is " + getDpFilePath )
+  let gth = (sendToAngularAccessToken)
+  let modifyGth = (gth.split(" "))
+  let saveAccess = (modifyGth[1])
+  let sendToGd = ''
+  let lastPart = getDpFilePath.split('/')
+  storeLastPart = lastPart[lastPart.length-1]
+  console.log('Last Part is ' + lastPart)
+  console.log('storeLastPart is ' + storeLastPart)
+
+  if(saveAccess.charAt(0) == '"' || saveAccess.charAt(saveAccess.length - 1) == '"'){
+    console.log('there is "')
+    //check it out
+    //-H 'Content-Type: application/octet-stream' \
+    child.exec(
+      `curl -X POST https://content.dropboxapi.com/2/files/download \
+       -H 'Authorization: Bearer ${saveAccess.substr(1,saveAccess.length - 3)}' \
+       -H 'Dropbox-Api-Arg: {"path": "${getDpFilePath}"}' \
+       -o "${storeLastPart}"`
+      ,(stdout, stderr) => {    
+        if(stderr.length > 0){
+          sendToGd = stderr;
+            console.log("the stdErr is " + stderr);           
+        } 
+        console.log("the stdOut is " + JSON.stringify(stdout));
+
+        // move file to AllFiles
+        tpMoveFilestoAllFiles(storeLastPart)
+      })
+        console.log("file transfered");
+        res.send("Response from Node: file downloaded");
+        /* setTimeout(async() => {
+          let moveFileResule = await tpMoveFilestoAllFiles(storeLastPart);
+          console.log("moveFileResule after send " + moveFileResule);
+        },10000 );    */           
+  }  
+/*   setTimeout(async() => {
+    let moveFileResule2 = await tpMoveFilestoAllFiles(storeLastPart);
+    console.log("moveFileResule after send " + moveFileResule2);
+  },10000 ); */  
+})
 router.post('/GdId', function (req, res) {
   console.log("GdId called ")
   Gdrecivedid = req.body.gdSaveId
@@ -794,6 +944,30 @@ router.get('/DownloadGd', function (req, res)
      console.log("the stdOut is " + JSON.stringify(sendToGd)) 
       // move file to AllFiles
      //tpMoveFilestoAllFiles(GdrecivedName)
+     res.send("Response from Node: File downloaded from Google drive")   
+   }) 
+})
+router.get('/DownloadGdLocal', function (req, res)
+{
+  //get gd file name
+  console.log("DownloadGdLocal called ")
+  console.log("GdId from node " + Gdrecivedid)
+  console.log("GdrecivedName from node " + GdrecivedName)
+  //      --header 'Content-Type: application/json' \
+  let sendToGd = ""
+  let fileNameCreate = GdrecivedName.toString();
+  return child.exec(
+     `curl --location --request GET 'https://www.googleapis.com/drive/v2/files/${Gdrecivedid}?alt=media&source=downloadUrl' \
+      --header 'Authorization: Bearer ${saveGDAccessToken}' \
+      -o "${fileNameCreate}"`
+    ,(stdout, stderr) => {    
+     if(stderr.length > 0){
+       sendToGd = stderr; 
+         console.log("the stdErr is " + stderr)            
+     } 
+     console.log("the stdOut is " + JSON.stringify(sendToGd)) 
+      // move file to AllFiles
+     tpMoveFilestoAllFiles(GdrecivedName)
      res.send("Response from Node: File downloaded from Google drive")   
    }) 
 })
